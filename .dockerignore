@@ -1,0 +1,15 @@
+.git
+.gitignore
+*.zip
+*.bat
+*.ps1
+backend/bin
+backend/target
+bin
+target
+test
+docs
+sql
+database
+.env
+backend/.env
