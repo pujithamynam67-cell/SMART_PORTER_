@@ -14,7 +14,7 @@ public class AppConfig {
     // Application Details
     public static final String APP_NAME = DotenvLoader.get("APP_NAME", "SmartPorter");
     public static final String APP_ENV = DotenvLoader.get("APP_ENV", "development");
-    public static final int APP_PORT = DotenvLoader.getInt("APP_PORT", 8080);
+    public static final int APP_PORT = DotenvLoader.getInt("PORT", DotenvLoader.getInt("APP_PORT", 8080));
     public static final String APP_BASE_URL = DotenvLoader.get("APP_BASE_URL", "http://localhost:8080/SmartPorter");
 
     // MySQL Database Details (Loaded Dynamically)
