@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Luggage Service Receipt - Smart Porter</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <link href="../assets/css/style.css" rel="stylesheet">
+</head>
+<body class="bg-light">
+    <div class="container py-5">
+        <div class="row justify-content-center">
+            <div class="col-md-7">
+                <div class="card p-5 border-0 shadow rounded-4 bg-white" id="receiptPrintArea">
+                    <div class="d-flex justify-content-between align-items-center border-bottom pb-4 mb-4">
+                        <div>
+                            <h3 class="fw-bold text-navy mb-0">
+                                <i class="fa-solid fa-cart-flatbed-suitcase text-warning me-2"></i>SmartPorter
+                            </h3>
+                            <small class="text-muted">Indian Railways Digital Coolie Service Invoice</small>
+                        </div>
+                        <div class="text-end">
+                            <span class="badge bg-success px-3 py-2 text-uppercase">PAID RECEIPT</span>
+                            <div class="small text-muted mt-1" id="receiptDate">-</div>
+                        </div>
+                    </div>
+
+                    <div class="row g-3 mb-4">
+                        <div class="col-6">
+                            <span class="text-muted small d-block">Booking Reference</span>
+                            <strong class="fs-5 text-navy" id="rcBookingCode">-</strong>
+                        </div>
+                        <div class="col-6 text-end">
+                            <span class="text-muted small d-block">Transaction Reference</span>
+                            <strong class="text-dark" id="rcTxnRef">-</strong>
+                        </div>
+                    </div>
+
+                    <div class="p-3 bg-light rounded-3 mb-4 border">
+                        <div class="row g-2 small">
+                            <div class="col-6"><span class="text-muted">Passenger:</span> <strong id="rcPassName">-</strong></div>
+                            <div class="col-6"><span class="text-muted">Phone:</span> <strong id="rcPassPhone">-</strong></div>
+                            <div class="col-6"><span class="text-muted">Station:</span> <strong id="rcStation">-</strong></div>
+                            <div class="col-6"><span class="text-muted">Licensed Porter (Coolie):</span> <strong class="text-danger" id="rcPorter">-</strong></div>
+                            <div class="col-6"><span class="text-muted">From (Pickup):</span> <span id="rcPickup">-</span></div>
+                            <div class="col-6"><span class="text-muted">To (Drop):</span> <span id="rcDrop">-</span></div>
+                        </div>
+                    </div>
+
+                    <h6 class="fw-bold text-navy mb-2">Service & Tariff Details</h6>
+                    <table class="table small mb-4">
+                        <tbody>
+                            <tr>
+                                <td>Luggage Category & Weight</td>
+                                <td class="text-end" id="rcLuggageDesc">-</td>
+                            </tr>
+                            <tr>
+                                <td>Payment Method</td>
+                                <td class="text-end" id="rcPayMethod">ONLINE_DEMO</td>
+                            </tr>
+                            <tr class="fw-bold fs-5 border-top">
+                                <td>Total Service Fee</td>
+                                <td class="text-end text-success" id="rcTotalAmount">₹0.00</td>
+                            </tr>
+                        </tbody>
+                    </table>
+
+                    <div class="text-center small text-muted border-top pt-3">
+                        Thank you for using Smart Porter. Standardized luggage mobility under IRCTC Sahayak Welfare Guidelines.
+                    </div>
+                </div>
+
+                <div class="d-flex justify-content-between mt-3">
+                    <a href="dashboard.html" class="btn btn-outline-secondary"><i class="fa-solid fa-arrow-left me-1"></i> Dashboard</a>
+                    <button class="btn btn-sp-navy" onclick="window.print()"><i class="fa-solid fa-print me-1"></i> Print Receipt</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    <script src="../assets/js/api.js"></script>
+    <script>
+        const urlParams = new URLSearchParams(window.location.search);
+        const bookingId = parseInt(urlParams.get('id')) || 1;
+
+        async function loadReceipt() {
+            try {
+                const res = await API.getBookingDetails(bookingId);
+                const b = res.data;
+                document.getElementById('rcBookingCode').textContent = b.bookingCode || `SP-2026-${bookingId}`;
+                document.getElementById('receiptDate').textContent = b.bookingTime ? new Date(b.bookingTime).toLocaleString('en-IN') : new Date().toLocaleString('en-IN');
+                document.getElementById('rcPassName').textContent = b.passengerName || 'Rajesh Sharma';
+                document.getElementById('rcPassPhone').textContent = b.passengerPhone || '9811002233';
+                document.getElementById('rcStation').textContent = `${b.stationCode || 'NDLS'} - ${b.stationName || 'New Delhi'}`;
+                document.getElementById('rcPorter').textContent = b.porterBadge ? `${b.porterName} (${b.porterBadge})` : 'Ramesh Kumar (CK-101)';
+                document.getElementById('rcPickup').textContent = b.pickupLocationName || 'Gate 1';
+                document.getElementById('rcDrop').textContent = b.dropLocationName || 'Platform 1';
+                document.getElementById('rcTotalAmount').textContent = `₹${Number(b.totalAmount || 0).toFixed(2)}`;
+                document.getElementById('rcLuggageDesc').textContent = b.luggage ? `${b.luggage.bagCount || 1}x ${b.luggage.category || 'Trolley Case'} (${b.luggage.weightKg || 15} kg)` : 'Standard baggage';
+                if (b.payment) {
+                    document.getElementById('rcTxnRef').textContent = b.payment.transactionReference || 'TXN-DEMO-01';
+                    document.getElementById('rcPayMethod').textContent = b.payment.paymentMethod || 'UPI';
+                } else {
+                    document.getElementById('rcTxnRef').textContent = `TXN-SP-2026-${Math.floor(100000+Math.random()*900000)}`;
+                    document.getElementById('rcPayMethod').textContent = 'Instant UPI (GPay/Paytm)';
+                }
+            } catch(e) {}
+        }
+        loadReceipt();
+    </script>
+</body>
+</html>

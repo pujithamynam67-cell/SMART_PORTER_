@@ -1,0 +1,482 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Live Luggage Tracker - Smart Porter</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <link href="../assets/css/style.css" rel="stylesheet">
+    <style>
+        .porter-card-box {
+            background: linear-gradient(135deg, #f8fafc 0%, #ffffff 100%);
+            border: 2px solid #fed7aa; border-radius: 16px;
+        }
+        .porter-badge-pill {
+            background: linear-gradient(135deg, #1e3a5f, #2d5f8a);
+            color: #fff; border-radius: 6px; padding: 4px 10px;
+            font-size: 13px; font-weight: 700; letter-spacing: 0.5px;
+        }
+        .porter-avatar {
+            width: 56px; height: 56px; border-radius: 50%;
+            background: linear-gradient(135deg, #f97316, #ea580c);
+            color: white; display: flex; align-items: center; justify-content: center;
+            font-size: 1.5rem; font-weight: bold; flex-shrink: 0;
+            border: 3px solid #ffedd5;
+        }
+        .radar-box {
+            background: #fff7ed; border: 2px dashed #f97316; border-radius: 16px;
+            padding: 24px; text-align: center;
+        }
+        .pulse-circle {
+            width: 70px; height: 70px; border-radius: 50%;
+            background: rgba(249, 115, 22, 0.2); display: inline-flex;
+            align-items: center; justify-content: center;
+            animation: pulseAnim 1.8s infinite;
+        }
+        @keyframes pulseAnim {
+            0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(249, 115, 22, 0.5); }
+            70% { transform: scale(1.05); box-shadow: 0 0 0 16px rgba(249, 115, 22, 0); }
+            100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(249, 115, 22, 0); }
+        }
+    </style>
+</head>
+<body class="bg-light">
+
+    <nav class="navbar navbar-expand-lg sp-navbar sticky-top">
+        <div class="container">
+            <a class="navbar-brand sp-brand" href="../index.html">
+                <i class="fa-solid fa-cart-flatbed-suitcase text-warning"></i>
+                Smart<span>Porter</span>
+            </a>
+            <div class="ms-auto d-flex align-items-center gap-2">
+                <a href="dashboard.html" class="btn btn-outline-light btn-sm">
+                    <i class="fa-solid fa-arrow-left me-1"></i> Dashboard
+                </a>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container py-4">
+        <div class="row justify-content-center">
+            <div class="col-lg-8">
+                
+                <div class="card p-4 border-0 shadow-sm rounded-4 mb-4">
+                    <div class="d-flex justify-content-between align-items-center border-bottom pb-3 mb-4">
+                        <div>
+                            <span class="badge bg-warning text-dark text-uppercase fw-bold"><i class="fa-solid fa-satellite-dish me-1"></i> Live Luggage Assistance</span>
+                            <h4 class="fw-bold text-navy mt-1 mb-0" id="bookingCode">Loading...</h4>
+                        </div>
+                        <div class="text-end">
+                            <span class="small text-muted d-block">Total Tariff</span>
+                            <h3 class="fw-bold text-navy mb-0" id="fareDisplay">₹0.00</h3>
+                        </div>
+                    </div>
+
+                    <!-- Step Tracker Wizard (5 Real-Time Stages) -->
+                    <div class="step-tracker mb-4">
+                        <div class="step-node active" id="node-requested">
+                            <div class="step-circle"><i class="fa-solid fa-paper-plane"></i></div>
+                            <div class="step-label">1. Requested</div>
+                        </div>
+                        <div class="step-node" id="node-accepted">
+                            <div class="step-circle"><i class="fa-solid fa-id-badge"></i></div>
+                            <div class="step-label">2. Assigned</div>
+                        </div>
+                        <div class="step-node" id="node-arriving">
+                            <div class="step-circle"><i class="fa-solid fa-person-walking"></i></div>
+                            <div class="step-label">3. Arriving</div>
+                        </div>
+                        <div class="step-node" id="node-started">
+                            <div class="step-circle"><i class="fa-solid fa-suitcase-rolling"></i></div>
+                            <div class="step-label">4. In Transit</div>
+                        </div>
+                        <div class="step-node" id="node-completed">
+                            <div class="step-circle"><i class="fa-solid fa-circle-check"></i></div>
+                            <div class="step-label">5. Completed</div>
+                        </div>
+                    </div>
+
+                    <!-- REAL-TIME STATUS MESSAGE BANNER -->
+                    <div id="statusBanner" class="alert p-3 rounded-4 mb-4 text-center">
+                        <span id="statusBannerText"><i class="fa-solid fa-spinner fa-spin me-2"></i> Fetching booking status...</span>
+                    </div>
+
+                    <!-- 1. WAITING FOR PORTER ACCEPTANCE (Shown when status is REQUESTED) -->
+                    <div id="waitingForPorterBox" class="radar-box mb-4" style="display: none;">
+                        <div class="pulse-circle mb-3">
+                            <i class="fa-solid fa-person-walking-luggage fa-2x text-warning"></i>
+                        </div>
+                        <h5 class="fw-bold text-navy mb-1">Request Sent to Station Coolies</h5>
+                        <p class="text-muted small mb-3">
+                            Your luggage assistance request is live! Station coolies receive this on their Duty Desk.
+                            As soon as a porter accepts, this screen will automatically change to <strong>Assigned</strong>.
+                        </p>
+                        <div class="p-2 rounded bg-white border d-inline-flex align-items-center gap-2 mb-2">
+                            <div class="spinner-grow spinner-grow-sm text-warning" role="status"></div>
+                            <span class="small text-muted">Listening for porter acceptance in real-time...</span>
+                        </div>
+                        <div class="mt-2">
+                            <a href="../porter/requests.html" target="_blank" class="btn btn-sm btn-outline-danger me-2">
+                                <i class="fa-solid fa-arrow-up-right-from-square me-1"></i> Open Porter Requests Desk
+                            </a>
+                            <button class="btn btn-sm btn-danger fw-bold" onclick="simulatePorterAccept()">
+                                <i class="fa-solid fa-hand-holding-hand me-1"></i> Quick Test: Accept as Porter
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- 2. ASSIGNED PORTER DETAILS CARD (Shown when ACCEPTED, ARRIVING, IN TRANSIT, COMPLETED) -->
+                    <div id="porterCardBox" class="p-3 porter-card-box mb-4 shadow-sm" style="display: none;">
+                        <div class="d-flex justify-content-between align-items-center flex-wrap gap-3">
+                            <div class="d-flex align-items-center gap-3">
+                                <div class="porter-avatar" id="porterAvatar">
+                                    <i class="fa-solid fa-person-carrying-box"></i>
+                                </div>
+                                <div>
+                                    <div class="d-flex align-items-center gap-2 mb-1">
+                                        <span class="porter-badge-pill" id="porterBadgeDisplay">CK-101</span>
+                                        <span class="badge bg-success-subtle text-success border border-success-subtle">
+                                            <i class="fa-solid fa-circle fa-2xs me-1"></i>LICENSED COOLIE
+                                        </span>
+                                    </div>
+                                    <h5 class="fw-bold text-navy mb-0" id="porterNameDisplay">Ramesh Kumar</h5>
+                                    <div class="small text-muted mt-1">
+                                        <i class="fa-solid fa-star text-warning"></i> <strong id="porterRatingDisplay">4.90</strong> · 
+                                        <span id="porterStationDisplay">New Delhi (Platform 1)</span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="d-flex gap-2">
+                                <a id="porterCallLink" href="tel:9876543210" class="btn btn-outline-primary fw-bold">
+                                    <i class="fa-solid fa-phone me-1"></i> Call Porter
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Route & Booking Info -->
+                    <div class="bg-light p-3 rounded-3 mb-4 small border">
+                        <div class="row g-2">
+                            <div class="col-6">
+                                <span class="text-muted d-block">Railway Station:</span>
+                                <strong id="stationNameDisplay">-</strong>
+                            </div>
+                            <div class="col-6">
+                                <span class="text-muted d-block">Train & Berth:</span>
+                                <strong id="trainDisplay">-</strong>
+                            </div>
+                            <div class="col-6">
+                                <span class="text-muted d-block">Pickup Location:</span>
+                                <strong class="text-primary" id="pickupDisplay">-</strong>
+                            </div>
+                            <div class="col-6">
+                                <span class="text-muted d-block">Drop Point:</span>
+                                <strong class="text-success" id="dropDisplay">-</strong>
+                            </div>
+                            <div class="col-12 border-top pt-2 mt-2">
+                                <span class="text-muted d-block">Luggage Carried:</span>
+                                <strong id="luggageDisplay">-</strong>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Passenger Action Controls (Pay & Complete, Rate, Receipt) -->
+                    <div class="d-flex flex-wrap gap-2">
+                        <!-- Pay & Complete Delivery Button (Enabled during Transit or Delivered) -->
+                        <button id="payBtn" style="display: none;" class="btn btn-success flex-grow-1 py-3 fw-bold shadow-lg" onclick="openPaymentModal()">
+                            <i class="fa-solid fa-circle-check me-2"></i> Confirm Luggage Delivered & Pay ₹<span id="payBtnAmount">0</span>
+                        </button>
+                        <!-- Feedback Button -->
+                        <button id="feedbackBtn" style="display: none;" class="btn btn-sp-orange flex-grow-1 py-2 fw-bold shadow-sm" onclick="openFeedbackModal()">
+                            <i class="fa-solid fa-star me-1"></i> Rate Porter Service
+                        </button>
+                        <!-- Receipt Button -->
+                        <a id="receiptBtn" style="display: none;" href="#" class="btn btn-outline-secondary py-2">
+                            <i class="fa-solid fa-receipt me-1"></i> View Official Receipt
+                        </a>
+                        <!-- Cancel Button (Only if REQUESTED) -->
+                        <button id="cancelBtn" class="btn btn-outline-danger py-2" onclick="handleCancel()">
+                            <i class="fa-solid fa-ban me-1"></i> Cancel Request
+                        </button>
+                    </div>
+
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+    <!-- Demo Payment Gateway Modal -->
+    <div class="modal fade" id="paymentModal" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content p-3 border-0 rounded-4 shadow-lg">
+                <div class="modal-header border-0 pb-0">
+                    <h5 class="fw-bold text-navy"><i class="fa-solid fa-wallet text-success me-2"></i> Complete Service Payment</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <p class="text-muted small">Standard IRCTC tariff collected on delivery. Direct payout credited to the porter's verified Coolie account.</p>
+                    <div class="p-3 bg-light rounded-3 mb-3 text-center border">
+                        <span class="small text-muted d-block">Total Tariff Payable</span>
+                        <h2 class="fw-bold text-success mb-0" id="modalPayAmount">₹0.00</h2>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label small fw-bold text-muted">Payment Mode</label>
+                        <select id="paymentMethod" class="form-select">
+                            <option value="UPI">Instant UPI (GPay / PhonePe / Paytm)</option>
+                            <option value="CASH">Cash Direct to Porter</option>
+                            <option value="CARD">Debit / Credit Card</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="modal-footer border-0 pt-0">
+                    <button type="button" class="btn btn-success w-100 py-2 fw-bold" onclick="executePayment()">
+                        <i class="fa-solid fa-check-circle me-1"></i> Authorize & Complete Service
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Rating & Review Modal -->
+    <div class="modal fade" id="feedbackModal" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content p-3 border-0 rounded-4 shadow-lg">
+                <div class="modal-header border-0 pb-0">
+                    <h5 class="fw-bold text-navy"><i class="fa-solid fa-star text-warning me-2"></i> Rate Porter Service</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body text-center">
+                    <p class="text-muted small mb-3">Your rating directly updates the Sahayak's average star rating and roster ranking.</p>
+                    <div class="mb-3 fs-2 text-warning" style="cursor:pointer" id="starContainer">
+                        <i class="fa-solid fa-star" onclick="setStars(1)"></i>
+                        <i class="fa-solid fa-star" onclick="setStars(2)"></i>
+                        <i class="fa-solid fa-star" onclick="setStars(3)"></i>
+                        <i class="fa-solid fa-star" onclick="setStars(4)"></i>
+                        <i class="fa-solid fa-star" onclick="setStars(5)"></i>
+                    </div>
+                    <input type="hidden" id="starValue" value="5">
+                    <div class="mb-3 text-start">
+                        <label class="form-label small fw-bold text-muted">Feedback Comments</label>
+                        <textarea id="feedbackText" class="form-control" rows="3" placeholder="Punctual, handled heavy luggage safely..."></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer border-0 pt-0">
+                    <button type="button" class="btn btn-sp-orange w-100 py-2 fw-bold" onclick="executeFeedback()">
+                        Submit Review
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="../assets/js/api.js"></script>
+    <script>
+        const urlParams = new URLSearchParams(window.location.search);
+        const bookingId = parseInt(urlParams.get('id')) || 1;
+        let bookingData = null;
+        let pollingInterval = null;
+
+        async function fetchBooking() {
+            try {
+                const res = await API.getBookingDetails(bookingId);
+                bookingData = res.data;
+                renderBooking(bookingData);
+            } catch(e) {}
+        }
+
+        function renderBooking(b) {
+            if (!b) return;
+            document.getElementById('bookingCode').textContent = b.bookingCode || `SP-2026-${bookingId}`;
+            document.getElementById('fareDisplay').textContent = `₹${Number(b.totalAmount || 0).toFixed(2)}`;
+            document.getElementById('modalPayAmount').textContent = `₹${Number(b.totalAmount || 0).toFixed(2)}`;
+            document.getElementById('payBtnAmount').textContent = Number(b.totalAmount || 0).toFixed(2);
+            document.getElementById('stationNameDisplay').textContent = `${b.stationCode || 'NDLS'} - ${b.stationName || 'Station'}`;
+            document.getElementById('pickupDisplay').textContent = b.pickupLocationName || 'Station Main Gate';
+            document.getElementById('dropDisplay').textContent = b.dropLocationName || 'Platform 1';
+            document.getElementById('trainDisplay').textContent = b.trainNumber ? `${b.trainNumber} (Coach ${b.coachNumber || 'B1'}, Seat ${b.seatNumber || '20'})` : 'Station Express';
+            document.getElementById('luggageDisplay').textContent = b.luggage ? `${b.luggage.bagCount || 1}x ${b.luggage.category || 'Trolley Case'} (${b.luggage.weightKg || 15} kg)` : 'Standard baggage';
+
+            // Reset node active classes
+            const nodes = ['requested', 'accepted', 'arriving', 'started', 'completed'];
+            nodes.forEach(n => document.getElementById(`node-${n}`).className = 'step-node');
+
+            const statusBanner = document.getElementById('statusBanner');
+            const statusBannerText = document.getElementById('statusBannerText');
+            const waitingBox = document.getElementById('waitingForPorterBox');
+            const porterCardBox = document.getElementById('porterCardBox');
+            const payBtn = document.getElementById('payBtn');
+            const feedbackBtn = document.getElementById('feedbackBtn');
+            const receiptBtn = document.getElementById('receiptBtn');
+            const cancelBtn = document.getElementById('cancelBtn');
+
+            // 1. STAGE: REQUESTED (Waiting for Coolie to accept)
+            if (b.bookingStatus === 'REQUESTED') {
+                document.getElementById('node-requested').classList.add('active');
+                statusBanner.className = 'alert alert-warning p-3 rounded-4 mb-4 text-center';
+                statusBannerText.innerHTML = '<i class="fa-solid fa-satellite-dish fa-spin me-2"></i><strong>Stage 1: REQUESTED</strong> — Waiting for station coolie to accept request...';
+                waitingBox.style.display = 'block';
+                porterCardBox.style.display = 'none';
+                payBtn.style.display = 'none';
+                cancelBtn.style.display = 'block';
+                receiptBtn.style.display = 'none';
+                feedbackBtn.style.display = 'none';
+            }
+            // 2. STAGE: ACCEPTED (Porter has accepted -> Assigned)
+            else if (b.bookingStatus === 'ACCEPTED') {
+                document.getElementById('node-requested').classList.add('completed');
+                document.getElementById('node-accepted').classList.add('active');
+                statusBanner.className = 'alert alert-info p-3 rounded-4 mb-4 text-center';
+                statusBannerText.innerHTML = `<i class="fa-solid fa-check-circle me-2"></i><strong>Stage 2: ASSIGNED</strong> — Porter <strong>${b.porterName || 'Sahayak'} (${b.porterBadge || 'CK-101'})</strong> accepted your job! Preparing to move to pickup gate.`;
+                waitingBox.style.display = 'none';
+                porterCardBox.style.display = 'block';
+                payBtn.style.display = 'none';
+                cancelBtn.style.display = 'none';
+                receiptBtn.style.display = 'none';
+                feedbackBtn.style.display = 'none';
+            }
+            // 3. STAGE: PORTER_ARRIVING (Porter is on the way)
+            else if (b.bookingStatus === 'PORTER_ARRIVING') {
+                document.getElementById('node-requested').classList.add('completed');
+                document.getElementById('node-accepted').classList.add('completed');
+                document.getElementById('node-arriving').classList.add('active');
+                statusBanner.className = 'alert alert-primary p-3 rounded-4 mb-4 text-center';
+                statusBannerText.innerHTML = `<i class="fa-solid fa-person-walking me-2"></i><strong>Stage 3: ARRIVING</strong> — Coolie <strong>${b.porterName || 'Sahayak'}</strong> is walking to your pickup location (${b.pickupLocationName || 'Gate'}). Please be ready!`;
+                waitingBox.style.display = 'none';
+                porterCardBox.style.display = 'block';
+                payBtn.style.display = 'none';
+                cancelBtn.style.display = 'none';
+                receiptBtn.style.display = 'none';
+                feedbackBtn.style.display = 'none';
+            }
+            // 4. STAGE: SERVICE_STARTED (In Transit — luggage being carried)
+            else if (b.bookingStatus === 'SERVICE_STARTED') {
+                document.getElementById('node-requested').classList.add('completed');
+                document.getElementById('node-accepted').classList.add('completed');
+                document.getElementById('node-arriving').classList.add('completed');
+                document.getElementById('node-started').classList.add('active');
+                statusBanner.className = 'alert alert-warning p-3 rounded-4 mb-4 text-center border-warning';
+                statusBannerText.innerHTML = `<i class="fa-solid fa-suitcase-rolling me-2"></i><strong>Stage 4: IN TRANSIT</strong> — Luggage loaded! Coolie is carrying bags to your coach berth. When delivered, complete payment below.`;
+                waitingBox.style.display = 'none';
+                porterCardBox.style.display = 'block';
+                payBtn.style.display = 'block';
+                cancelBtn.style.display = 'none';
+                receiptBtn.style.display = 'none';
+                feedbackBtn.style.display = 'none';
+            }
+            // 5. STAGE: COMPLETED (Delivery finished and paid)
+            else if (b.bookingStatus === 'COMPLETED') {
+                nodes.forEach(n => document.getElementById(`node-${n}`).classList.add('completed'));
+                statusBanner.className = 'alert alert-success p-3 rounded-4 mb-4 text-center border-success';
+                statusBannerText.innerHTML = '<i class="fa-solid fa-circle-check fs-5 me-2"></i><strong>Stage 5: COMPLETED</strong> — Service delivered and paid! Thank you for choosing Smart Porter.';
+                waitingBox.style.display = 'none';
+                porterCardBox.style.display = 'block';
+                payBtn.style.display = 'none';
+                cancelBtn.style.display = 'none';
+                receiptBtn.style.display = 'block';
+                receiptBtn.href = `receipt.html?id=${b.bookingId}`;
+                if (!b.feedback) {
+                    feedbackBtn.style.display = 'block';
+                }
+            }
+            // 6. STAGE: CANCELLED
+            else if (b.bookingStatus === 'CANCELLED') {
+                statusBanner.className = 'alert alert-danger p-3 rounded-4 mb-4 text-center';
+                statusBannerText.innerHTML = '<i class="fa-solid fa-ban me-2"></i><strong>Booking Cancelled</strong>.';
+                waitingBox.style.display = 'none';
+                cancelBtn.disabled = true;
+                cancelBtn.textContent = 'Cancelled';
+            }
+
+            // Populate Porter Card
+            if (b.porterName) {
+                document.getElementById('porterBadgeDisplay').textContent = b.porterBadge || 'CK-101';
+                document.getElementById('porterNameDisplay').textContent = b.porterName;
+                document.getElementById('porterRatingDisplay').textContent = Number(b.porterRating || 4.90).toFixed(2);
+                document.getElementById('porterStationDisplay').textContent = `${b.stationName || 'Station'} (Platform ${b.currentPlatform || 1})`;
+                document.getElementById('porterCallLink').href = `tel:${b.porterPhone || '9876543210'}`;
+            }
+        }
+
+        // Quick simulation helper for testing the coolie acceptance from passenger page
+        async function simulatePorterAccept() {
+            try {
+                await API.porterAcceptBooking(bookingId, 1);
+                showNotification('Coolie Ramesh Kumar (CK-101) accepted the booking!', 'success');
+                fetchBooking();
+            } catch(e) {
+                showNotification(e.message, 'danger');
+            }
+        }
+
+        async function handleCancel() {
+            if (!confirm('Cancel this luggage assistance request?')) return;
+            try {
+                await API.cancelBooking(bookingId, 'Passenger cancelled before assignment');
+                showNotification('Request has been cancelled.', 'info');
+                fetchBooking();
+            } catch(e) {
+                showNotification(e.message, 'danger');
+            }
+        }
+
+        function openPaymentModal() {
+            new bootstrap.Modal(document.getElementById('paymentModal')).show();
+        }
+
+        async function executePayment() {
+            const method = document.getElementById('paymentMethod').value;
+            try {
+                await API.processDemoPayment({
+                    bookingId: bookingId,
+                    amount: bookingData.totalAmount,
+                    paymentMethod: method
+                });
+                bootstrap.Modal.getInstance(document.getElementById('paymentModal')).hide();
+                showNotification('Payment successful! Service marked completed.', 'success');
+                fetchBooking();
+            } catch(e) {
+                showNotification(e.message || 'Payment error', 'danger');
+            }
+        }
+
+        function openFeedbackModal() {
+            new bootstrap.Modal(document.getElementById('feedbackModal')).show();
+        }
+
+        function setStars(n) {
+            document.getElementById('starValue').value = n;
+            const stars = document.querySelectorAll('#starContainer i');
+            stars.forEach((s, idx) => {
+                s.className = (idx < n) ? 'fa-solid fa-star' : 'fa-regular fa-star';
+            });
+        }
+
+        async function executeFeedback() {
+            const rating = parseInt(document.getElementById('starValue').value);
+            const comments = document.getElementById('feedbackText').value.trim();
+            try {
+                await API.submitFeedback({
+                    bookingId: bookingId,
+                    passengerId: bookingData.passengerId,
+                    porterId: bookingData.porterId || 1,
+                    rating: rating,
+                    comments: comments
+                });
+                bootstrap.Modal.getInstance(document.getElementById('feedbackModal')).hide();
+                showNotification('Rating submitted! Thank you.', 'success');
+                document.getElementById('feedbackBtn').style.display = 'none';
+            } catch(e) {
+                showNotification(e.message || 'Feedback error', 'danger');
+            }
+        }
+
+        // Initialize and poll every 2 seconds for real-time porter state transitions
+        fetchBooking();
+        pollingInterval = setInterval(fetchBooking, 2000);
+    </script>
+</body>
+</html>

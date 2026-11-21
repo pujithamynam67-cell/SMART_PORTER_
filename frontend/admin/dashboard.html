@@ -1,0 +1,371 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Dashboard - Smart Porter</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <link href="../assets/css/style.css" rel="stylesheet">
+    <style>
+        body { background: #f0f4f8; }
+        .admin-sidebar {
+            background: linear-gradient(180deg, #1e3a5f 0%, #0f1f36 100%);
+            min-height: 100vh; width: 240px;
+            position: fixed; top: 0; left: 0; z-index: 100; padding: 20px 0;
+        }
+        .admin-sidebar .nav-link {
+            color: rgba(255,255,255,0.7); padding: 10px 20px; transition: all 0.2s;
+        }
+        .admin-sidebar .nav-link:hover, .admin-sidebar .nav-link.active {
+            color: #fff; background: rgba(249,115,22,0.2); border-left: 3px solid #f97316;
+        }
+        .admin-sidebar .brand { padding: 0 20px 20px; border-bottom: 1px solid rgba(255,255,255,0.1); margin-bottom: 10px; }
+        .admin-content { margin-left: 240px; padding: 24px; }
+        .kpi-card { border-radius: 16px; border: none; }
+        .kpi-icon { width: 56px; height: 56px; border-radius: 14px; display: flex; align-items: center; justify-content: center; font-size: 22px; }
+        .dbms-card { background: #1e3a5f; color: #fff; border-radius: 12px; }
+        .dbms-card pre { background: #0f1f36; color: #90e0ef; border-radius: 8px; padding: 12px; font-size: 12px; white-space: pre-wrap; }
+        .porter-badge { background: linear-gradient(135deg,#1e3a5f,#2d5f8a); color:#fff; border-radius:6px; padding:2px 8px; font-size:11px; font-weight:700; }
+        @media(max-width:768px){ .admin-sidebar{display:none;} .admin-content{margin-left:0;} }
+    </style>
+</head>
+<body>
+<!-- Sidebar -->
+<div class="admin-sidebar">
+    <div class="brand">
+        <div class="text-warning fw-bold fs-5">
+            <i class="fa-solid fa-cart-flatbed-suitcase me-2"></i>Smart Porter
+        </div>
+        <small class="text-white-50">Station Controller Panel</small>
+    </div>
+    <nav class="nav flex-column">
+        <a href="#" class="nav-link active" onclick="switchTab('overview',this);return false;">
+            <i class="fa-solid fa-gauge me-2"></i>Dashboard
+        </a>
+        <a href="#" class="nav-link" onclick="switchTab('porters',this);return false;">
+            <i class="fa-solid fa-id-badge me-2"></i>Porter Management
+        </a>
+        <a href="#" class="nav-link" onclick="switchTab('passengers',this);return false;">
+            <i class="fa-solid fa-users me-2"></i>Passengers
+        </a>
+        <a href="#" class="nav-link" onclick="switchTab('bookings',this);return false;">
+            <i class="fa-solid fa-clipboard-list me-2"></i>All Bookings
+        </a>
+        <a href="#" class="nav-link" onclick="switchTab('dbms',this);return false;">
+            <i class="fa-solid fa-database me-2"></i>DBMS Demo
+        </a>
+        <hr style="border-color:rgba(255,255,255,0.1);margin:10px 20px;">
+        <a href="../index.html" class="nav-link"><i class="fa-solid fa-house me-2"></i>Main Site</a>
+        <a href="#" class="nav-link text-danger-emphasis" onclick="doLogout();return false;">
+            <i class="fa-solid fa-right-from-bracket me-2"></i>Logout
+        </a>
+    </nav>
+</div>
+
+<!-- Main -->
+<div class="admin-content">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h4 class="fw-bold text-navy mb-0">Station Controller Dashboard</h4>
+            <small class="text-muted">Smart Porter — IRCTC Sahayak Management</small>
+        </div>
+        <div class="d-flex align-items-center gap-3">
+            <span class="badge bg-success px-3 py-2"><i class="fa-solid fa-circle fa-xs me-1"></i>System Online</span>
+            <span class="text-muted small" id="adminName">Controller</span>
+        </div>
+    </div>
+
+    <!-- OVERVIEW -->
+    <div id="tab-overview">
+        <div class="row g-3 mb-4">
+            <div class="col-md-3"><div class="card kpi-card shadow-sm p-3">
+                <div class="d-flex align-items-center gap-3">
+                    <div class="kpi-icon" style="background:#fff7ed"><i class="fa-solid fa-clipboard-list text-warning"></i></div>
+                    <div><div class="text-muted small">Total Bookings</div><div class="fw-bold fs-4" id="kpiBookings">—</div></div>
+                </div></div></div>
+            <div class="col-md-3"><div class="card kpi-card shadow-sm p-3">
+                <div class="d-flex align-items-center gap-3">
+                    <div class="kpi-icon" style="background:#f0fdf4"><i class="fa-solid fa-id-badge text-success"></i></div>
+                    <div><div class="text-muted small">Total Porters</div><div class="fw-bold fs-4" id="kpiPorters">—</div></div>
+                </div></div></div>
+            <div class="col-md-3"><div class="card kpi-card shadow-sm p-3">
+                <div class="d-flex align-items-center gap-3">
+                    <div class="kpi-icon" style="background:#eff6ff"><i class="fa-solid fa-users text-primary"></i></div>
+                    <div><div class="text-muted small">Passengers</div><div class="fw-bold fs-4" id="kpiPassengers">—</div></div>
+                </div></div></div>
+            <div class="col-md-3"><div class="card kpi-card shadow-sm p-3">
+                <div class="d-flex align-items-center gap-3">
+                    <div class="kpi-icon" style="background:#fdf4ff"><i class="fa-solid fa-indian-rupee-sign" style="color:#7c3aed"></i></div>
+                    <div><div class="text-muted small">Total Revenue</div><div class="fw-bold fs-4" id="kpiRevenue">—</div></div>
+                </div></div></div>
+        </div>
+
+        <div class="card border-0 shadow-sm rounded-4 p-4 mb-4">
+            <h6 class="fw-bold text-navy mb-3"><i class="fa-solid fa-clock-rotate-left text-warning me-2"></i>Recent Bookings</h6>
+            <div class="table-responsive">
+                <table class="table table-hover table-sm">
+                    <thead class="table-light"><tr><th>Booking Code</th><th>Passenger</th><th>Porter</th><th>Station</th><th>Amount</th><th>Status</th><th>Date</th></tr></thead>
+                    <tbody id="recentBookingsTable"><tr><td colspan="7" class="text-center text-muted py-3"><i class="fa-solid fa-spinner fa-spin me-2"></i>Loading...</td></tr></tbody>
+                </table>
+            </div>
+        </div>
+
+        <div class="card border-0 shadow-sm rounded-4 p-4">
+            <h6 class="fw-bold text-navy mb-3"><i class="fa-solid fa-user-clock text-danger me-2"></i>Pending Porter Approvals</h6>
+            <div id="pendingApprovals"><div class="text-center text-muted py-3"><i class="fa-solid fa-spinner fa-spin me-2"></i>Loading...</div></div>
+        </div>
+    </div>
+
+    <!-- PORTERS -->
+    <div id="tab-porters" style="display:none">
+        <div class="card border-0 shadow-sm rounded-4 p-4">
+            <h6 class="fw-bold text-navy mb-3"><i class="fa-solid fa-id-badge text-warning me-2"></i>All Porters</h6>
+            <div class="table-responsive">
+                <table class="table table-hover table-sm">
+                    <thead class="table-light"><tr><th>Badge</th><th>Name</th><th>Phone</th><th>Station</th><th>Status</th><th>Rating</th><th>Trips</th><th>Earnings</th><th>Action</th></tr></thead>
+                    <tbody id="portersTable"><tr><td colspan="9" class="text-center text-muted py-3"><i class="fa-solid fa-spinner fa-spin me-2"></i>Loading...</td></tr></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- PASSENGERS -->
+    <div id="tab-passengers" style="display:none">
+        <div class="card border-0 shadow-sm rounded-4 p-4">
+            <h6 class="fw-bold text-navy mb-3"><i class="fa-solid fa-users text-warning me-2"></i>Registered Passengers</h6>
+            <div class="table-responsive">
+                <table class="table table-hover table-sm">
+                    <thead class="table-light"><tr><th>#</th><th>Name</th><th>Phone</th><th>Email</th><th>Gender</th><th>Senior</th><th>Status</th><th>Registered</th></tr></thead>
+                    <tbody id="passengersTable"><tr><td colspan="8" class="text-center text-muted py-3"><i class="fa-solid fa-spinner fa-spin me-2"></i>Loading...</td></tr></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- BOOKINGS -->
+    <div id="tab-bookings" style="display:none">
+        <div class="card border-0 shadow-sm rounded-4 p-4">
+            <h6 class="fw-bold text-navy mb-3"><i class="fa-solid fa-clipboard-list text-warning me-2"></i>All Bookings</h6>
+            <div class="table-responsive">
+                <table class="table table-hover table-sm">
+                    <thead class="table-light"><tr><th>Code</th><th>Passenger</th><th>Porter</th><th>Station</th><th>Luggage</th><th>Amount</th><th>Status</th><th>Date/Time</th></tr></thead>
+                    <tbody id="allBookingsTable"><tr><td colspan="8" class="text-center text-muted py-3"><i class="fa-solid fa-spinner fa-spin me-2"></i>Loading...</td></tr></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- DBMS DEMO -->
+    <div id="tab-dbms" style="display:none">
+        <div class="card border-0 shadow-sm rounded-4 p-4 mb-4">
+            <h5 class="fw-bold text-navy mb-1"><i class="fa-solid fa-database text-warning me-2"></i>DBMS Concepts Live Demo</h5>
+            <p class="text-muted small mb-4">Click any concept below to see real MySQL output from the Smart Porter database.</p>
+            <div class="row g-2 mb-4">
+                <div class="col-6 col-md-3"><button class="btn btn-outline-primary w-100 dbms-btn py-3" onclick="runDbmsDemo('joins',this)"><i class="fa-solid fa-code-branch d-block mb-1 fs-5"></i>SQL JOINs</button></div>
+                <div class="col-6 col-md-3"><button class="btn btn-outline-success w-100 dbms-btn py-3" onclick="runDbmsDemo('aggregates',this)"><i class="fa-solid fa-chart-bar d-block mb-1 fs-5"></i>Aggregates</button></div>
+                <div class="col-6 col-md-3"><button class="btn btn-outline-info w-100 dbms-btn py-3" onclick="runDbmsDemo('views',this)"><i class="fa-solid fa-eye d-block mb-1 fs-5"></i>Views</button></div>
+                <div class="col-6 col-md-3"><button class="btn btn-outline-warning w-100 dbms-btn py-3" onclick="runDbmsDemo('procedures',this)"><i class="fa-solid fa-cogs d-block mb-1 fs-5"></i>Procedures</button></div>
+                <div class="col-6 col-md-3"><button class="btn btn-outline-danger w-100 dbms-btn py-3" onclick="runDbmsDemo('triggers',this)"><i class="fa-solid fa-bolt d-block mb-1 fs-5"></i>Triggers</button></div>
+                <div class="col-6 col-md-3"><button class="btn btn-outline-secondary w-100 dbms-btn py-3" onclick="runDbmsDemo('normalization',this)"><i class="fa-solid fa-table d-block mb-1 fs-5"></i>Normalization</button></div>
+                <div class="col-6 col-md-3"><button class="btn w-100 dbms-btn py-3" style="border-color:#7c3aed;color:#7c3aed" onclick="runDbmsDemo('transactions',this)"><i class="fa-solid fa-shield d-block mb-1 fs-5"></i>Transactions</button></div>
+                <div class="col-6 col-md-3"><button class="btn btn-outline-dark w-100 dbms-btn py-3" onclick="runDbmsDemo('subqueries',this)"><i class="fa-solid fa-code d-block mb-1 fs-5"></i>Subqueries</button></div>
+            </div>
+            <div id="dbmsDemoResult" class="d-none">
+                <div class="dbms-card p-4">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <h6 class="fw-bold mb-0 text-warning" id="demoConceptTitle"></h6>
+                        <span class="badge bg-success" id="demoRowCount"></span>
+                    </div>
+                    <small class="text-white-50">SQL Query Executed:</small>
+                    <pre class="mt-1" id="demoSqlQuery">Loading...</pre>
+                    <small class="text-white-50">Results from MySQL:</small>
+                    <div class="table-responsive mt-2">
+                        <table class="table table-dark table-sm" style="font-size:12px" id="demoResultTable">
+                            <thead id="demoResultHead"></thead>
+                            <tbody id="demoResultBody"></tbody>
+                        </table>
+                    </div>
+                    <div class="mt-3 p-3 rounded" style="background:rgba(255,255,255,0.05)">
+                        <small class="text-warning fw-bold">DBMS Concept Explained:</small><br>
+                        <small class="text-white-50" id="demoExplanation"></small>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="../assets/js/api.js"></script>
+<script>
+const dbmsMeta = {
+    joins:        { title:'SQL JOINs — Multi-table Query',          explanation:'INNER JOIN connects Bookings with Passengers, Porters, and Stations across 4 tables to show a combined result. Demonstrates relational database design and foreign key relationships.' },
+    aggregates:   { title:'Aggregate Functions — COUNT, SUM, AVG',  explanation:'GROUP BY with COUNT(), SUM(), and AVG() calculate totals per station/porter. Demonstrates how MySQL summarizes large datasets efficiently.' },
+    views:        { title:'Database Views — vw_active_bookings',     explanation:'A VIEW is a saved SELECT query. vw_active_bookings joins multiple tables and is queried like a table. Views simplify complex queries and add a security layer.' },
+    procedures:   { title:'Stored Procedures — sp_create_booking',   explanation:'Stored procedures are pre-compiled SQL programs. sp_create_booking validates input, creates a booking, adds luggage — all in one ACID transaction.' },
+    triggers:     { title:'Triggers — Auto-execute on INSERT/UPDATE', explanation:'Triggers run SQL automatically on table events. trg_after_porter_registered creates availability on INSERT. trg_after_booking_completed recalculates ratings.' },
+    normalization:{ title:'Normalization — 1NF, 2NF, 3NF Design',   explanation:'1NF: Atomic values. 2NF: No partial dependency — pricing is in pricing_rules, not bookings. 3NF: No transitive dependency — passenger city is NOT stored in bookings.' },
+    transactions: { title:'ACID Transactions — Atomicity Demo',      explanation:'ACID = Atomicity, Consistency, Isolation, Durability. Booking uses START TRANSACTION/COMMIT/ROLLBACK for all-or-nothing execution. If payment fails, booking rolls back.' },
+    subqueries:   { title:'Subqueries — Nested SELECT Statements',   explanation:'Subqueries are SELECT statements inside another query. Here: passengers with bookings (EXISTS), porters earning above average (scalar subquery).' }
+};
+
+function switchTab(tab, el) {
+    document.querySelectorAll('[id^="tab-"]').forEach(t => t.style.display = 'none');
+    document.querySelectorAll('.admin-sidebar .nav-link').forEach(l => l.classList.remove('active'));
+    document.getElementById('tab-' + tab).style.display = 'block';
+    if (el) el.classList.add('active');
+    if (tab === 'overview')    loadOverview();
+    else if (tab === 'porters')    loadPorters();
+    else if (tab === 'passengers') loadPassengers();
+    else if (tab === 'bookings')   loadBookings();
+}
+
+const statusColor = s => ({ COMPLETED:'success', REQUESTED:'warning', ACCEPTED:'info', CANCELLED:'danger', SERVICE_STARTED:'primary' }[s] || 'secondary');
+
+async function loadOverview() {
+    try {
+        const r = await API.getAdminDashboard(); const d = r.data || {};
+        document.getElementById('kpiBookings').textContent   = d.totalBookings ?? '—';
+        document.getElementById('kpiPorters').textContent    = d.totalPorters ?? '—';
+        document.getElementById('kpiPassengers').textContent = d.totalPassengers ?? '—';
+        document.getElementById('kpiRevenue').textContent    = d.totalRevenue ? `₹${Number(d.totalRevenue).toLocaleString('en-IN')}` : '—';
+    } catch(e) {}
+
+    try {
+        const r = await API.getAdminBookings(); const bks = (r.data || []).slice(0, 10);
+        document.getElementById('recentBookingsTable').innerHTML = !bks.length
+            ? '<tr><td colspan="7" class="text-center text-muted">No bookings yet.</td></tr>'
+            : bks.map(b => `<tr>
+                <td><code class="text-primary">${b.bookingCode||'—'}</code></td>
+                <td>${b.passengerName||`P#${b.passengerId}`}</td>
+                <td>${b.porterName||(b.porterId?`Porter #${b.porterId}`:'Auto')}</td>
+                <td>${b.stationName||`S#${b.stationId}`}</td>
+                <td class="fw-bold">₹${Number(b.totalAmount||0).toFixed(2)}</td>
+                <td><span class="badge bg-${statusColor(b.bookingStatus)}-subtle text-${statusColor(b.bookingStatus)} border border-${statusColor(b.bookingStatus)}-subtle">${b.bookingStatus}</span></td>
+                <td class="text-muted small">${b.bookingTime?new Date(b.bookingTime).toLocaleDateString('en-IN'):'—'}</td>
+            </tr>`).join('');
+    } catch(e) { document.getElementById('recentBookingsTable').innerHTML = '<tr><td colspan="7" class="text-muted text-center">Could not load bookings.</td></tr>'; }
+
+    try {
+        const r = await API.getAdminPorters();
+        const pending = (r.data||[]).filter(p => p.verificationStatus==='PENDING');
+        document.getElementById('pendingApprovals').innerHTML = !pending.length
+            ? '<div class="text-muted small"><i class="fa-solid fa-check-circle text-success me-2"></i>No pending approvals.</div>'
+            : pending.map(p => `<div class="d-flex justify-content-between align-items-center border rounded-3 p-3 mb-2">
+                <div><span class="porter-badge me-2">${p.badgeNumber}</span><strong>${p.fullName}</strong><small class="text-muted ms-2">${p.phone}</small></div>
+                <div class="d-flex gap-2">
+                    <button class="btn btn-success btn-sm" onclick="approvePorter(${p.porterId},'APPROVED')"><i class="fa-solid fa-check me-1"></i>Approve</button>
+                    <button class="btn btn-outline-danger btn-sm" onclick="approvePorter(${p.porterId},'REJECTED')">Reject</button>
+                </div></div>`).join('');
+    } catch(e) {}
+}
+
+async function loadPorters() {
+    try {
+        const r = await API.getAdminPorters(); const ps = r.data||[];
+        document.getElementById('portersTable').innerHTML = !ps.length
+            ? '<tr><td colspan="9" class="text-center text-muted">No porters found.</td></tr>'
+            : ps.map(p => {
+                const sc = {APPROVED:'success',PENDING:'warning',REJECTED:'danger',SUSPENDED:'secondary'}[p.verificationStatus]||'secondary';
+                return `<tr>
+                    <td><span class="porter-badge">${p.badgeNumber}</span></td>
+                    <td class="fw-semibold">${p.fullName}</td>
+                    <td><small>${p.phone}</small></td>
+                    <td><small>${p.stationName||`Stn #${p.stationId}`}</small></td>
+                    <td><span class="badge bg-${sc}-subtle text-${sc} border border-${sc}-subtle">${p.verificationStatus}</span></td>
+                    <td>⭐ ${p.ratingAvg||'N/A'}</td>
+                    <td>${p.totalCompletedBookings||0}</td>
+                    <td>₹${Number(p.totalEarnings||0).toLocaleString('en-IN')}</td>
+                    <td>${p.verificationStatus==='PENDING'
+                        ? `<button class="btn btn-success btn-sm" onclick="approvePorter(${p.porterId},'APPROVED')">Approve</button>`
+                        : '<span class="text-muted small">—</span>'}</td>
+                </tr>`;
+            }).join('');
+    } catch(e) { document.getElementById('portersTable').innerHTML = '<tr><td colspan="9" class="text-muted text-center">Could not load.</td></tr>'; }
+}
+
+async function loadPassengers() {
+    try {
+        const r = await API.getAdminPassengers(); const ps = r.data||[];
+        document.getElementById('passengersTable').innerHTML = !ps.length
+            ? '<tr><td colspan="8" class="text-center text-muted">No passengers registered.</td></tr>'
+            : ps.map((p,i) => `<tr>
+                <td>${i+1}</td><td class="fw-semibold">${p.fullName}</td>
+                <td>${p.phone}</td><td>${p.email}</td><td>${p.gender||'—'}</td>
+                <td>${p.isSeniorCitizen?'<span class="badge bg-info">Senior</span>':'—'}</td>
+                <td><span class="badge bg-${p.status==='ACTIVE'?'success':'secondary'}-subtle text-${p.status==='ACTIVE'?'success':'secondary'}">${p.status}</span></td>
+                <td class="text-muted small">${p.createdAt?new Date(p.createdAt).toLocaleDateString('en-IN'):'—'}</td>
+            </tr>`).join('');
+    } catch(e) { document.getElementById('passengersTable').innerHTML = '<tr><td colspan="8" class="text-muted text-center">Could not load.</td></tr>'; }
+}
+
+async function loadBookings() {
+    try {
+        const r = await API.getAdminBookings(); const bks = r.data||[];
+        document.getElementById('allBookingsTable').innerHTML = !bks.length
+            ? '<tr><td colspan="8" class="text-center text-muted">No bookings yet.</td></tr>'
+            : bks.map(b => {
+                const sc = statusColor(b.bookingStatus);
+                return `<tr>
+                    <td><code class="text-primary small">${b.bookingCode}</code></td>
+                    <td>${b.passengerName||`P#${b.passengerId}`}</td>
+                    <td>${b.porterName||(b.porterId?`P#${b.porterId}`:'Auto')}</td>
+                    <td>${b.stationName||`S#${b.stationId}`}</td>
+                    <td class="small">${b.luggageCategory||'—'}<br><small class="text-muted">${b.weightKg||'?'} kg</small></td>
+                    <td class="fw-bold">₹${Number(b.totalAmount||0).toFixed(2)}</td>
+                    <td><span class="badge bg-${sc}-subtle text-${sc} border border-${sc}-subtle small">${b.bookingStatus}</span></td>
+                    <td class="text-muted small">${b.bookingTime?new Date(b.bookingTime).toLocaleString('en-IN'):'—'}</td>
+                </tr>`;
+            }).join('');
+    } catch(e) { document.getElementById('allBookingsTable').innerHTML = '<tr><td colspan="8" class="text-muted text-center">Could not load.</td></tr>'; }
+}
+
+async function approvePorter(porterId, status) {
+    try {
+        await API.approvePorter(porterId, status);
+        showNotification(`Porter ${status==='APPROVED'?'approved':'rejected'} successfully!`, 'success');
+        loadOverview(); loadPorters();
+    } catch(e) { showNotification('Action failed: ' + (e.message||'Unknown error'), 'danger'); }
+}
+
+async function runDbmsDemo(concept, btn) {
+    document.querySelectorAll('.dbms-btn').forEach(b => b.classList.remove('active'));
+    if (btn) btn.classList.add('active');
+    const meta = dbmsMeta[concept]||{};
+    document.getElementById('dbmsDemoResult').classList.remove('d-none');
+    document.getElementById('demoConceptTitle').textContent = meta.title||concept;
+    document.getElementById('demoExplanation').textContent  = meta.explanation||'';
+    document.getElementById('demoRowCount').textContent     = 'Loading...';
+    document.getElementById('demoSqlQuery').textContent     = 'Executing query on MySQL...';
+    document.getElementById('demoResultBody').innerHTML     = '<tr><td colspan="10" class="text-center"><i class="fa-solid fa-spinner fa-spin me-2"></i>Querying MySQL...</td></tr>';
+    document.getElementById('demoResultHead').innerHTML     = '';
+
+    try {
+        const res = await API.runDbmsDemo(concept); const d = res.data||{};
+        document.getElementById('demoSqlQuery').textContent = d.query||'(query not returned)';
+        const results = d.results||[];
+        document.getElementById('demoRowCount').textContent = `${results.length} rows`;
+        if (!results.length) {
+            document.getElementById('demoResultBody').innerHTML = '<tr><td class="text-muted">No results returned.</td></tr>';
+            return;
+        }
+        const headers = Object.keys(results[0]);
+        document.getElementById('demoResultHead').innerHTML = `<tr>${headers.map(h=>`<th class="text-warning">${h}</th>`).join('')}</tr>`;
+        document.getElementById('demoResultBody').innerHTML = results.slice(0,20).map(row =>
+            `<tr>${headers.map(h=>`<td>${row[h]??'—'}</td>`).join('')}</tr>`
+        ).join('');
+    } catch(e) {
+        document.getElementById('demoSqlQuery').textContent = 'Error';
+        document.getElementById('demoResultBody').innerHTML = `<tr><td class="text-danger">${e.message}</td></tr>`;
+    }
+}
+
+function doLogout() { localStorage.removeItem('sp_user'); window.location.href='../auth/admin-login.html'; }
+
+// Init
+const raw = localStorage.getItem('sp_user');
+if (raw) { try { const u=JSON.parse(raw); if(u.type==='ADMIN'&&u.data) document.getElementById('adminName').textContent=u.data.fullName||'Controller'; } catch(e){} }
+loadOverview();
+</script>
+</body>
+</html>

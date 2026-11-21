@@ -1,0 +1,23 @@
+# Environment Variables
+.env
+*.env.local
+
+# Java Build Artifacts
+target/
+bin/
+*.class
+*.jar
+*.war
+*.ear
+
+# IDE Files
+.idea/
+*.iml
+.project
+.classpath
+.settings/
+.vscode/
+
+# OS Files
+.DS_Store
+Thumbs.db

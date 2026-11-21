@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Active Job Console - Smart Porter</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <link href="../assets/css/style.css" rel="stylesheet">
+    <style>
+        .active-stage-card {
+            border-left: 5px solid #f97316;
+            background: linear-gradient(135deg, #fff7ed 0%, #ffffff 100%);
+        }
+    </style>
+</head>
+<body class="bg-light">
+    <nav class="navbar navbar-expand-lg sp-navbar sticky-top">
+        <div class="container">
+            <a class="navbar-brand sp-brand" href="../index.html">
+                <i class="fa-solid fa-cart-flatbed-suitcase text-warning"></i>
+                Smart<span>Porter</span>
+                <span class="badge bg-danger ms-2 small">COOLIE DESK</span>
+            </a>
+            <div class="ms-auto d-flex align-items-center gap-2">
+                <a href="dashboard.html" class="btn btn-outline-light btn-sm"><i class="fa-solid fa-arrow-left me-1"></i> Dashboard</a>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Sub Navigation -->
+    <div class="bg-white border-bottom py-2 shadow-sm">
+        <div class="container d-flex gap-3 small fw-bold">
+            <a href="dashboard.html" class="text-muted text-decoration-none py-1">Dashboard</a>
+            <a href="requests.html" class="text-muted text-decoration-none py-1">Incoming Requests</a>
+            <a href="active-job.html" class="text-danger text-decoration-none py-1 border-bottom border-danger border-2">Active Job</a>
+            <a href="history.html" class="text-muted text-decoration-none py-1">Trip History</a>
+            <a href="profile.html" class="text-muted text-decoration-none py-1">My Badge</a>
+        </div>
+    </div>
+
+    <div class="container py-4">
+        <div class="row justify-content-center">
+            <div class="col-lg-8">
+                
+                <div class="card p-4 border-0 shadow rounded-4 mb-4">
+                    <div class="d-flex justify-content-between align-items-center border-bottom pb-3 mb-4 flex-wrap gap-2">
+                        <div>
+                            <span class="badge bg-danger text-uppercase fw-bold" id="jobStatusBadge">ACTIVE ASSIGNMENT</span>
+                            <h4 class="fw-bold text-navy mt-1 mb-0" id="jobCode">SP-2026-XXXX</h4>
+                        </div>
+                        <div class="text-end">
+                            <span class="small text-muted d-block">Coolie Tariff</span>
+                            <h3 class="fw-bold text-success mb-0" id="jobFare">₹0.00</h3>
+                        </div>
+                    </div>
+
+                    <!-- Passenger Contact Box -->
+                    <div class="p-3 bg-light rounded-3 mb-4 border d-flex justify-content-between align-items-center flex-wrap gap-2">
+                        <div>
+                            <span class="text-muted small d-block">Passenger Assigned</span>
+                            <h5 class="fw-bold text-navy mb-0" id="jobPassName">Rajesh Sharma</h5>
+                            <span class="text-muted small">Mobile: <strong class="text-dark" id="jobPassPhone">9811002233</strong></span>
+                        </div>
+                        <a href="tel:9811002233" id="jobCallBtn" class="btn btn-outline-primary px-3 fw-bold">
+                            <i class="fa-solid fa-phone me-1"></i> Call Passenger
+                        </a>
+                    </div>
+
+                    <!-- Movement Route & Baggage Details -->
+                    <div class="card p-3 border mb-4 bg-white">
+                        <h6 class="fw-bold text-navy mb-2"><i class="fa-solid fa-route text-warning me-1"></i> Station Route & Luggage Details</h6>
+                        <div class="row g-2 small">
+                            <div class="col-6"><span class="text-muted">Railway Station:</span> <strong id="jobStation">-</strong></div>
+                            <div class="col-6"><span class="text-muted">Train / Coach:</span> <strong id="jobTrain">-</strong></div>
+                            <div class="col-6"><span class="text-muted">Pickup Location:</span> <strong class="text-primary" id="jobPickup">-</strong></div>
+                            <div class="col-6"><span class="text-muted">Drop Destination:</span> <strong class="text-success" id="jobDrop">-</strong></div>
+                            <div class="col-12 border-top pt-2 mt-2"><span class="text-muted">Luggage To Carry:</span> <strong id="jobLuggage">-</strong></div>
+                        </div>
+                    </div>
+
+                    <!-- PORTER ACTION SEQUENCE -->
+                    <div class="card p-4 rounded-4 active-stage-card mb-3">
+                        <h5 class="fw-bold text-navy mb-2"><i class="fa-solid fa-circle-play text-warning me-2"></i> Update Service Stage</h5>
+                        <p class="text-muted small mb-3">
+                            When you update each stage here, the passenger's tracking screen immediately reflects the progress in real-time.
+                        </p>
+
+                        <!-- Step 1: Porter marks on the way (Assigned -> Arriving) -->
+                        <div id="stepArrivingSection" style="display: none;">
+                            <div class="alert alert-info py-2 small mb-3">
+                                <i class="fa-solid fa-info-circle me-1"></i>
+                                You have accepted this booking. Please proceed to the pickup location.
+                            </div>
+                            <button id="btnArriving" class="btn btn-primary w-100 py-3 fw-bold shadow-sm" onclick="advanceStatus('PORTER_ARRIVING')">
+                                <i class="fa-solid fa-person-walking me-2"></i> I Am On The Way (Mark Arriving at Pickup Gate)
+                            </button>
+                        </div>
+
+                        <!-- Step 2: Porter collects luggage (Arriving -> In Transit) -->
+                        <div id="stepStartedSection" style="display: none;">
+                            <div class="alert alert-warning py-2 small mb-3 border-warning">
+                                <i class="fa-solid fa-person-walking-luggage me-1"></i>
+                                Met the passenger? Load the luggage and start moving towards the platform.
+                            </div>
+                            <button id="btnStarted" class="btn btn-warning w-100 py-3 fw-bold text-dark shadow-sm" onclick="advanceStatus('SERVICE_STARTED')">
+                                <i class="fa-solid fa-suitcase-rolling me-2"></i> Luggage Collected & Loaded — Start Transit to Coach
+                            </button>
+                        </div>
+
+                        <!-- Step 3: Delivered — Waiting for Passenger Payment & Completion -->
+                        <div id="stepDeliveredSection" style="display: none;">
+                            <div class="alert alert-primary py-3 rounded-3 text-center mb-3">
+                                <div class="spinner-grow spinner-grow-sm text-primary mb-2" role="status"></div>
+                                <h6 class="fw-bold mb-1">In Transit to Coach Berth</h6>
+                                <p class="small text-muted mb-0">Luggage is being carried. Once you place the luggage at the passenger's seat, the passenger will confirm delivery and complete payment on their device.</p>
+                            </div>
+                            <button class="btn btn-outline-success w-100 py-2 fw-bold" onclick="showNotification('Waiting for passenger to complete payment on their device.', 'info')">
+                                <i class="fa-solid fa-clock me-1"></i> Awaiting Passenger Delivery Confirmation & Payment
+                            </button>
+                        </div>
+
+                        <!-- Step 4: Finished & Paid -->
+                        <div id="jobDoneMessage" style="display: none;" class="alert alert-success p-4 rounded-4 text-center">
+                            <i class="fa-solid fa-circle-check fs-1 text-success mb-2 d-block"></i>
+                            <h4 class="fw-bold text-success mb-1">Service Delivered & Paid!</h4>
+                            <p class="text-muted small mb-3">Payment of <strong id="paidAmountDisplay">₹0.00</strong> has been processed. Fare credited to your coolie account.</p>
+                            <a href="dashboard.html" class="btn btn-success px-4 py-2 fw-bold shadow-sm">
+                                <i class="fa-solid fa-house me-1"></i> Back to Duty Dashboard
+                            </a>
+                        </div>
+                    </div>
+
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+    <script src="../assets/js/api.js"></script>
+    <script>
+        const urlParams = new URLSearchParams(window.location.search);
+        let bookingId = parseInt(urlParams.get('id'));
+        let currentPorter = { porterId: 1, stationId: 1 };
+        let refreshPoll = null;
+
+        async function initActiveJob() {
+            const raw = localStorage.getItem('sp_user');
+            if (raw) {
+                try {
+                    const u = JSON.parse(raw);
+                    if (u.type === 'PORTER' && u.data) currentPorter = u.data;
+                } catch(e) {}
+            }
+
+            if (!bookingId) {
+                // Find latest active job for this porter
+                const res = await API.getPorterHistory(currentPorter.porterId);
+                const list = res.data || [];
+                const active = list.find(b => ['ACCEPTED', 'PORTER_ARRIVING', 'SERVICE_STARTED'].includes(b.bookingStatus));
+                if (active) {
+                    bookingId = active.bookingId;
+                } else {
+                    alert('No active job in progress. Check incoming requests.');
+                    window.location.href = 'requests.html';
+                    return;
+                }
+            }
+            loadJobDetails();
+            refreshPoll = setInterval(loadJobDetails, 2000);
+        }
+
+        async function loadJobDetails() {
+            try {
+                const res = await API.getBookingDetails(bookingId);
+                const b = res.data;
+                if (!b) return;
+
+                document.getElementById('jobCode').textContent = b.bookingCode || `SP-2026-${bookingId}`;
+                document.getElementById('jobFare').textContent = `₹${Number(b.totalAmount || 0).toFixed(2)}`;
+                document.getElementById('paidAmountDisplay').textContent = `₹${Number(b.totalAmount || 0).toFixed(2)}`;
+                document.getElementById('jobPassName').textContent = b.passengerName || 'Rajesh Sharma';
+                document.getElementById('jobPassPhone').textContent = b.passengerPhone || '9811002233';
+                document.getElementById('jobCallBtn').href = `tel:${b.passengerPhone || '9811002233'}`;
+                document.getElementById('jobStation').textContent = `${b.stationCode || 'NDLS'} - ${b.stationName || 'Station'}`;
+                document.getElementById('jobTrain').textContent = b.trainNumber ? `${b.trainNumber} (Coach ${b.coachNumber || 'B1'}, Seat ${b.seatNumber || '25'})` : 'Station Express';
+                document.getElementById('jobPickup').textContent = b.pickupLocationName || 'Gate 1';
+                document.getElementById('jobDrop').textContent = b.dropLocationName || 'Platform 1';
+                document.getElementById('jobLuggage').textContent = b.luggage ? `${b.luggage.bagCount || 1}x ${b.luggage.category || 'Trolley'} (${b.luggage.weightKg || 15} KG)` : 'Standard baggage';
+
+                const secArriving = document.getElementById('stepArrivingSection');
+                const secStarted = document.getElementById('stepStartedSection');
+                const secDelivered = document.getElementById('stepDeliveredSection');
+                const doneMsg = document.getElementById('jobDoneMessage');
+                const statusBadge = document.getElementById('jobStatusBadge');
+
+                secArriving.style.display = 'none';
+                secStarted.style.display = 'none';
+                secDelivered.style.display = 'none';
+                doneMsg.style.display = 'none';
+
+                if (b.bookingStatus === 'ACCEPTED' || b.bookingStatus === 'REQUESTED') {
+                    statusBadge.textContent = 'STAGE: ASSIGNED';
+                    statusBadge.className = 'badge bg-info text-dark px-3 py-2 fw-bold';
+                    secArriving.style.display = 'block';
+                } else if (b.bookingStatus === 'PORTER_ARRIVING') {
+                    statusBadge.textContent = 'STAGE: ARRIVING AT GATE';
+                    statusBadge.className = 'badge bg-primary px-3 py-2 fw-bold';
+                    secStarted.style.display = 'block';
+                } else if (b.bookingStatus === 'SERVICE_STARTED') {
+                    statusBadge.textContent = 'STAGE: IN TRANSIT';
+                    statusBadge.className = 'badge bg-warning text-dark px-3 py-2 fw-bold';
+                    secDelivered.style.display = 'block';
+                } else if (b.bookingStatus === 'COMPLETED') {
+                    statusBadge.textContent = 'STAGE: COMPLETED & PAID';
+                    statusBadge.className = 'badge bg-success px-3 py-2 fw-bold';
+                    doneMsg.style.display = 'block';
+                }
+            } catch(e) {}
+        }
+
+        async function advanceStatus(newStatus) {
+            try {
+                await API.porterUpdateStatus(bookingId, currentPorter.porterId, newStatus, `Porter updated status to ${newStatus}`);
+                showNotification(`Status updated to: ${newStatus}`, 'success');
+                loadJobDetails();
+            } catch(e) {
+                showNotification(e.message, 'danger');
+            }
+        }
+
+        initActiveJob();
+    </script>
+</body>
+</html>

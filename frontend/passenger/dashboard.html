@@ -1,0 +1,252 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Passenger Dashboard - Smart Porter</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <link href="../assets/css/style.css" rel="stylesheet">
+</head>
+<body class="bg-light">
+
+    <!-- Top Navbar -->
+    <nav class="navbar navbar-expand-lg sp-navbar sticky-top">
+        <div class="container">
+            <a class="navbar-brand sp-brand" href="../index.html">
+                <i class="fa-solid fa-cart-flatbed-suitcase text-warning"></i>
+                Smart<span>Porter</span>
+            </a>
+            <div class="ms-auto d-flex align-items-center gap-3">
+                <div class="text-white small d-none d-md-block">
+                    Welcome, <strong id="userName">Passenger</strong>
+                </div>
+                <a href="book.html" class="btn btn-sp-orange btn-sm">
+                    <i class="fa-solid fa-bolt me-1"></i> Book a Porter
+                </a>
+                <button class="btn btn-outline-light btn-sm" onclick="handleLogout()">
+                    <i class="fa-solid fa-right-from-bracket"></i> Logout
+                </button>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Sub Navigation -->
+    <div class="bg-white border-bottom py-2 shadow-sm">
+        <div class="container d-flex gap-3 small fw-bold">
+            <a href="dashboard.html" class="text-warning text-decoration-none py-1 border-bottom border-warning border-2">Dashboard</a>
+            <a href="book.html" class="text-muted text-decoration-none py-1">New Booking</a>
+            <a href="history.html" class="text-muted text-decoration-none py-1">My Bookings</a>
+            <a href="profile.html" class="text-muted text-decoration-none py-1">My Profile</a>
+        </div>
+    </div>
+
+    <!-- Main Content -->
+    <div class="container py-4">
+        <!-- Active Booking Alert Banner -->
+        <div id="activeBookingBanner" style="display: none;" class="alert alert-warning border-warning shadow-sm p-3 mb-4 rounded-3 d-flex flex-wrap justify-content-between align-items-center">
+            <div>
+                <span class="badge bg-danger me-2">ACTIVE TRIP</span>
+                <strong id="activeBkCode">SP-2026-XXXX</strong> • Status: <span id="activeBkStatus" class="fw-bold text-dark">ACCEPTED</span>
+                <div class="small text-muted mt-1" id="activeBkDesc">Porter is arriving at your pickup location.</div>
+            </div>
+            <a id="activeBkTrackBtn" href="tracking.html" class="btn btn-sp-orange btn-sm mt-2 mt-md-0">
+                <i class="fa-solid fa-route me-1"></i> Open Live Tracker
+            </a>
+        </div>
+
+        <div class="row g-4 mb-4">
+            <!-- Booking Quick Action Card -->
+            <div class="col-lg-8">
+                <div class="card p-4 border-0 shadow-sm rounded-4 h-100" style="background: linear-gradient(135deg, #ffffff, #f8fafc);">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <div>
+                            <h4 class="fw-bold text-navy mb-1">Station Luggage Assistance</h4>
+                            <p class="text-muted small mb-0">Book licensed railway porters at standard rates across 25+ stations.</p>
+                        </div>
+                        <i class="fa-solid fa-person-walking-luggage text-warning fs-1"></i>
+                    </div>
+                    <div class="p-3 bg-light rounded-3 mb-4 border">
+                        <div class="row g-3">
+                            <div class="col-md-4">
+                                <div class="text-muted small">Step 1</div>
+                                <div class="fw-bold">Pick Station & Gate</div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="text-muted small">Step 2</div>
+                                <div class="fw-bold">Select Baggage Weight</div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="text-muted small">Step 3</div>
+                                <div class="fw-bold">Instant Porter Dispatch</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div>
+                        <a href="book.html" class="btn btn-sp-orange px-4 py-2 fw-bold">
+                            <i class="fa-solid fa-plus-circle me-1"></i> Create Luggage Booking
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Profile Summary Card -->
+            <div class="col-lg-4">
+                <div class="card p-4 border-0 shadow-sm rounded-4 h-100">
+                    <h5 class="fw-bold text-navy mb-3">Passenger Profile</h5>
+                    <div class="d-flex align-items-center gap-3 mb-3">
+                        <div class="rounded-circle bg-warning text-dark fw-bold d-flex align-items-center justify-content-center" style="width: 50px; height: 50px; font-size: 1.3rem;">
+                            <span id="profileInitial">P</span>
+                        </div>
+                        <div>
+                            <strong id="profileName" class="d-block text-navy">Passenger Name</strong>
+                            <span id="profilePhone" class="text-muted small">9811002233</span>
+                        </div>
+                    </div>
+                    <div class="border-top pt-3 small text-muted">
+                        <div class="d-flex justify-content-between mb-1">
+                            <span>Email:</span>
+                            <strong id="profileEmail" class="text-dark">user@rail.com</strong>
+                        </div>
+                        <div class="d-flex justify-content-between mb-1">
+                            <span>Concession:</span>
+                            <span class="badge bg-success" id="profileSenior">Standard</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Recent Bookings Table with PORTER DETAILS -->
+        <div class="card border-0 shadow-sm rounded-4 p-4">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <h5 class="fw-bold text-navy mb-0"><i class="fa-solid fa-clock-rotate-left me-2 text-warning"></i> My Luggage Bookings</h5>
+                <a href="history.html" class="text-warning small text-decoration-none fw-bold">View All</a>
+            </div>
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0" id="recentTable">
+                    <thead class="table-light small text-uppercase">
+                        <tr>
+                            <th>Code</th>
+                            <th>Station</th>
+                            <th>Assigned Porter</th>
+                            <th>Route</th>
+                            <th>Luggage</th>
+                            <th>Fare</th>
+                            <th>Status</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody id="recentTableBody">
+                        <tr>
+                            <td colspan="8" class="text-center text-muted py-4">
+                                <i class="fa-solid fa-spinner fa-spin me-2"></i>Loading bookings...
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <script src="../assets/js/api.js"></script>
+    <script>
+        let currentPassengerId = 1;
+
+        async function initDashboard() {
+            const rawUser = localStorage.getItem('sp_user');
+            if (rawUser) {
+                try {
+                    const u = JSON.parse(rawUser);
+                    if (u.data) {
+                        currentPassengerId = u.data.passengerId || 1;
+                        document.getElementById('userName').textContent = u.data.fullName || 'Passenger';
+                        document.getElementById('profileName').textContent = u.data.fullName || 'Passenger';
+                        document.getElementById('profilePhone').textContent = u.data.phone || '9811002233';
+                        document.getElementById('profileEmail').textContent = u.data.email || 'user@example.com';
+                        document.getElementById('profileInitial').textContent = (u.data.fullName || 'P').charAt(0).toUpperCase();
+                        if (u.data.isSeniorCitizen) {
+                            document.getElementById('profileSenior').textContent = 'Senior Citizen (15%)';
+                            document.getElementById('profileSenior').className = 'badge bg-info';
+                        }
+                    }
+                } catch(e) {}
+            }
+
+            loadHistory();
+        }
+
+        async function loadHistory() {
+            try {
+                const res = await API.getPassengerHistory(currentPassengerId);
+                renderBookings(res.data || []);
+            } catch(e) {
+                renderBookings([]);
+            }
+        }
+
+        function renderBookings(bookings) {
+            const tbody = document.getElementById('recentTableBody');
+            tbody.innerHTML = '';
+            let activeTrip = null;
+
+            if (bookings.length > 0) {
+                bookings.forEach(b => {
+                    if (['REQUESTED', 'ACCEPTED', 'PORTER_ARRIVING', 'SERVICE_STARTED'].includes(b.bookingStatus) && !activeTrip) {
+                        activeTrip = b;
+                    }
+                    const tr = document.createElement('tr');
+                    tr.innerHTML = `
+                        <td><strong>${b.bookingCode}</strong></td>
+                        <td>${b.stationCode || 'NDLS'} - ${b.stationName || 'Station'}</td>
+                        <td>
+                            <span class="badge bg-dark-subtle text-dark border me-1">${b.porterBadge || 'CK-101'}</span>
+                            <span class="small fw-semibold">${b.porterName || 'Ramesh Kumar'}</span>
+                        </td>
+                        <td><small>${b.pickupLocationName || 'Gate 1'} ➔ ${b.dropLocationName || 'Platform 1'}</small></td>
+                        <td><small>${b.luggage ? `${b.luggage.bagCount}x ${b.luggage.category} (${b.luggage.weightKg} kg)` : '-'}</small></td>
+                        <td><strong class="text-navy">₹${Number(b.totalAmount||0).toFixed(2)}</strong></td>
+                        <td><span class="badge ${getStatusBadge(b.bookingStatus)}">${b.bookingStatus}</span></td>
+                        <td><a href="tracking.html?id=${b.bookingId}" class="btn btn-sm btn-outline-primary py-0">Track</a></td>
+                    `;
+                    tbody.appendChild(tr);
+                });
+            } else {
+                tbody.innerHTML = `<tr>
+                    <td colspan="8" class="text-center py-4">
+                        <i class="fa-solid fa-suitcase-rolling fa-2x text-muted mb-2 d-block"></i>
+                        <div class="text-muted">No bookings yet. Book your first coolie assistance!</div>
+                        <a href="book.html" class="btn btn-sp-orange btn-sm mt-2">Book Now</a>
+                    </td>
+                </tr>`;
+            }
+
+            if (activeTrip) {
+                document.getElementById('activeBookingBanner').style.display = 'flex';
+                document.getElementById('activeBkCode').textContent = activeTrip.bookingCode;
+                document.getElementById('activeBkStatus').textContent = activeTrip.bookingStatus;
+                document.getElementById('activeBkTrackBtn').href = `tracking.html?id=${activeTrip.bookingId}`;
+            }
+        }
+
+        function getStatusBadge(status) {
+            switch(status) {
+                case 'COMPLETED': return 'bg-success';
+                case 'REQUESTED': return 'bg-warning text-dark';
+                case 'ACCEPTED': return 'bg-info text-dark';
+                case 'SERVICE_STARTED': return 'bg-primary';
+                case 'CANCELLED': return 'bg-danger';
+                default: return 'bg-secondary';
+            }
+        }
+
+        function handleLogout() {
+            try { API.logout(); } catch(e) {}
+            localStorage.removeItem('sp_user');
+            window.location.href = '../index.html';
+        }
+
+        initDashboard();
+    </script>
+</body>
+</html>

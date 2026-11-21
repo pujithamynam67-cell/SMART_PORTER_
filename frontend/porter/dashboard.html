@@ -1,0 +1,374 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Porter Console - Smart Porter</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <link href="../assets/css/style.css" rel="stylesheet">
+    <style>
+        .porter-badge-header {
+            background: linear-gradient(135deg, #1e3a5f, #2d5f8a);
+            color: #fff; border-radius: 8px; padding: 6px 14px;
+            font-weight: 700; letter-spacing: 1px;
+        }
+    </style>
+</head>
+<body class="bg-light">
+
+    <!-- Top Navbar -->
+    <nav class="navbar navbar-expand-lg sp-navbar sticky-top">
+        <div class="container">
+            <a class="navbar-brand sp-brand" href="../index.html">
+                <i class="fa-solid fa-cart-flatbed-suitcase text-warning"></i>
+                Smart<span>Porter</span>
+                <span class="badge bg-danger ms-2 small">COOLIE DESK</span>
+            </a>
+            <div class="ms-auto d-flex align-items-center gap-2">
+                <span class="text-white small d-none d-md-block" id="porterNavName">Ramesh Kumar (CK-101)</span>
+                <button class="btn btn-outline-danger btn-sm text-white" style="border-color: rgba(239, 68, 68, 0.8); background: rgba(239, 68, 68, 0.25);" onclick="openDeletePorterModal()" title="Permanently delete coolie account">
+                    <i class="fa-solid fa-trash-can me-1"></i> Delete Account
+                </button>
+                <button class="btn btn-outline-light btn-sm" onclick="handlePorterLogout()">
+                    <i class="fa-solid fa-right-from-bracket"></i> Logout
+                </button>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Sub Navigation -->
+    <div class="bg-white border-bottom py-2 shadow-sm">
+        <div class="container d-flex gap-3 small fw-bold">
+            <a href="dashboard.html" class="text-danger text-decoration-none py-1 border-bottom border-danger border-2">Dashboard</a>
+            <a href="requests.html" class="text-muted text-decoration-none py-1">Incoming Requests</a>
+            <a href="active-job.html" class="text-muted text-decoration-none py-1">Active Job</a>
+            <a href="history.html" class="text-muted text-decoration-none py-1">Trip History</a>
+            <a href="profile.html" class="text-muted text-decoration-none py-1">My Badge</a>
+        </div>
+    </div>
+
+    <div class="container py-4">
+        <!-- Duty Toggle & Porter Details Header Card -->
+        <div class="card p-4 border-0 shadow-sm rounded-4 mb-4">
+            <div class="d-flex flex-wrap justify-content-between align-items-center gap-3">
+                <div class="d-flex align-items-center gap-3">
+                    <span class="porter-badge-header fs-5" id="badgeDisplay">CK-101</span>
+                    <div>
+                        <div class="d-flex align-items-center gap-2">
+                            <h4 class="fw-bold text-navy mb-0" id="nameDisplay">Ramesh Kumar</h4>
+                            <span class="badge bg-success-subtle text-success border border-success-subtle">
+                                <i class="fa-solid fa-check-circle me-1"></i>Verified Sahayak
+                            </span>
+                        </div>
+                        <div class="small text-muted mt-1">
+                            Station: <strong class="text-dark" id="stationDisplay">New Delhi Railway Station (NDLS)</strong> • 
+                            Platform: <strong class="text-dark" id="platformDisplay">1</strong> • 
+                            Rating: <strong class="text-warning">★ <span id="ratingDisplay">4.90</span></strong>
+                        </div>
+                    </div>
+                </div>
+                <div class="d-flex align-items-center gap-2">
+                    <span class="small fw-bold text-muted">Duty Status:</span>
+                    <button id="toggleDutyBtn" class="btn btn-success px-3 py-2 fw-bold" onclick="toggleDuty()">
+                        <i class="fa-solid fa-circle me-1"></i> ONLINE (Available)
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- KPI Counters: Earnings, Trips, Verification -->
+        <div class="row g-3 mb-4">
+            <div class="col-md-4">
+                <div class="card p-3 border-0 shadow-sm rounded-4 text-center">
+                    <span class="text-muted small fw-bold text-uppercase">Lifetime Coolie Earnings</span>
+                    <h3 class="fw-bold text-success mb-0 mt-1" id="earningsDisplay">₹28,400.00</h3>
+                    <small class="text-muted">Direct Cashless Payout</small>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card p-3 border-0 shadow-sm rounded-4 text-center">
+                    <span class="text-muted small fw-bold text-uppercase">Completed Luggage Trips</span>
+                    <h3 class="fw-bold text-navy mb-0 mt-1" id="completedTripsDisplay">142</h3>
+                    <small class="text-muted">100% On-Time Completion</small>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card p-3 border-0 shadow-sm rounded-4 text-center">
+                    <span class="text-muted small fw-bold text-uppercase">IRCTC License Status</span>
+                    <h3 class="fw-bold text-primary mb-0 mt-1" id="verificationDisplay">APPROVED</h3>
+                    <small class="text-muted">Verified by Station Duty Master</small>
+                </div>
+            </div>
+        </div>
+
+        <!-- New Incoming Requests Alert Banner -->
+        <div id="newRequestBanner" class="alert alert-danger border-danger shadow-sm p-3 mb-4 rounded-4 d-flex justify-content-between align-items-center flex-wrap gap-2" style="display: none !important;">
+            <div class="d-flex align-items-center gap-3">
+                <div class="spinner-grow text-danger spinner-grow-sm" role="status"></div>
+                <div>
+                    <span class="badge bg-danger me-2">NEW REQUEST</span>
+                    <strong class="text-navy" id="newRequestSummary">1 Passenger Waiting for Coolie Assistance at Station!</strong>
+                    <div class="small text-muted" id="newRequestRoute">Pickup Gate ➔ Platform</div>
+                </div>
+            </div>
+            <a href="requests.html" class="btn btn-danger btn-sm px-3 py-2 fw-bold shadow-sm">
+                <i class="fa-solid fa-bell me-1"></i> View & Accept Job
+            </a>
+        </div>
+
+        <!-- Active Assignment Section -->
+        <div id="activeJobSection" class="card p-4 border-0 shadow-sm rounded-4 mb-4" style="display: none; border-left: 5px solid #f97316 !important;">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <span class="badge bg-warning text-dark px-3 py-2 fw-bold">ACTIVE TRIP IN PROGRESS</span>
+                <a href="active-job.html" class="btn btn-sp-orange btn-sm">Manage Active Job ➔</a>
+            </div>
+            <div class="row g-2 small">
+                <div class="col-md-4"><span class="text-muted">Booking Code:</span> <strong id="activeJobCode">-</strong></div>
+                <div class="col-md-4"><span class="text-muted">Passenger:</span> <strong id="activeJobPass">-</strong></div>
+                <div class="col-md-4"><span class="text-muted">Pickup Point:</span> <strong id="activeJobPickup">-</strong></div>
+            </div>
+        </div>
+
+        <!-- Recent Completed Jobs Table -->
+        <div class="card p-4 border-0 shadow-sm rounded-4">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <h5 class="fw-bold text-navy mb-0"><i class="fa-solid fa-list-check text-danger me-2"></i> Assigned Job Records</h5>
+                <a href="requests.html" class="btn btn-sm btn-outline-danger"><i class="fa-solid fa-bell me-1"></i> Check New Requests</a>
+            </div>
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0">
+                    <thead class="table-light small text-uppercase">
+                        <tr>
+                            <th>Code</th>
+                            <th>Passenger</th>
+                            <th>Luggage Info</th>
+                            <th>Fare</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody id="porterJobsBody">
+                        <tr><td colspan="5" class="text-center py-4 text-muted"><i class="fa-solid fa-spinner fa-spin me-2"></i>Loading assigned jobs...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Danger Zone: Permanent Porter Account Deletion -->
+        <div class="card border-danger-subtle bg-white shadow-sm rounded-4 p-4 mb-4">
+            <div class="d-flex justify-content-between align-items-center flex-wrap gap-3">
+                <div>
+                    <h5 class="fw-bold text-danger mb-1">
+                        <i class="fa-solid fa-triangle-exclamation me-2"></i> Surrender License & Delete Account
+                    </h5>
+                    <p class="text-muted small mb-0">
+                        Permanently deregister from this railway station, surrender your Sahayak badge, and erase all coolie records.
+                    </p>
+                </div>
+                <button class="btn btn-outline-danger fw-bold" onclick="openDeletePorterModal()">
+                    <i class="fa-solid fa-trash-can me-1"></i> Delete Porter Account
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Delete Porter Account Confirmation Modal -->
+    <div class="modal fade" id="deletePorterModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content border-0 rounded-4 shadow-lg overflow-hidden">
+                <div class="modal-header border-0 bg-danger text-white">
+                    <h5 class="fw-bold mb-0"><i class="fa-solid fa-triangle-exclamation me-2"></i> Delete Porter Account?</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body p-4">
+                    <p class="text-muted mb-3">
+                        Are you sure you want to permanently delete your coolie profile and surrender your official IRCTC Sahayak badge? This action <strong>cannot be undone</strong>.
+                    </p>
+                    <div class="p-3 bg-danger-subtle rounded-3 border border-danger-subtle mb-3">
+                        <div class="d-flex align-items-center gap-3">
+                            <span class="porter-badge-header bg-danger text-white fs-6" id="modalDelBadge">CK-101</span>
+                            <div>
+                                <strong class="text-danger d-block fs-6" id="modalDelName">Ramesh Kumar</strong>
+                                <small class="text-muted" id="modalDelStation">New Delhi Railway Station</small>
+                            </div>
+                        </div>
+                    </div>
+                    <ul class="text-muted small ps-3 mb-0">
+                        <li>Your duty status will be immediately marked <strong>OFFLINE</strong>.</li>
+                        <li>Any pending station luggage requests assigned to you will be released.</li>
+                        <li>Your badge record and login credentials will be permanently erased.</li>
+                    </ul>
+                </div>
+                <div class="modal-footer border-0 pt-0">
+                    <button type="button" class="btn btn-light" data-bs-dismiss="modal">Keep Account</button>
+                    <button type="button" class="btn btn-danger fw-bold shadow-sm" id="confirmDeletePorterBtn" onclick="executeDeletePorterAccount()">
+                        <i class="fa-solid fa-trash-can me-1"></i> Yes, Permanently Delete
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="../assets/js/api.js"></script>
+    <script>
+        let currentPorter = { porterId: 1, stationId: 1, isOnline: true };
+
+        async function initPorterDashboard() {
+            const raw = localStorage.getItem('sp_user');
+            if (raw) {
+                try {
+                    const u = JSON.parse(raw);
+                    if (u.type === 'PORTER' && u.data) {
+                        currentPorter = u.data;
+                    }
+                } catch(e) {}
+            }
+
+            // Populate all porter details
+            document.getElementById('badgeDisplay').textContent = currentPorter.badgeNumber || 'CK-101';
+            document.getElementById('nameDisplay').textContent = currentPorter.fullName || 'Ramesh Kumar';
+            document.getElementById('porterNavName').textContent = `${currentPorter.fullName || 'Ramesh Kumar'} (${currentPorter.badgeNumber || 'CK-101'})`;
+            document.getElementById('stationDisplay').textContent = currentPorter.stationName || 'New Delhi Railway Station (NDLS)';
+            document.getElementById('ratingDisplay').textContent = Number(currentPorter.ratingAvg || 4.90).toFixed(2);
+            document.getElementById('completedTripsDisplay').textContent = currentPorter.totalCompletedBookings || '142';
+            document.getElementById('earningsDisplay').textContent = `₹${Number(currentPorter.totalEarnings || 28400).toLocaleString('en-IN')}`;
+            document.getElementById('verificationDisplay').textContent = currentPorter.verificationStatus || 'APPROVED';
+            document.getElementById('platformDisplay').textContent = currentPorter.currentPlatform || '1';
+
+            updateDutyButton(currentPorter.isOnline !== false);
+            loadJobs();
+        }
+
+        function updateDutyButton(isOnline) {
+            const btn = document.getElementById('toggleDutyBtn');
+            if (isOnline) {
+                btn.className = 'btn btn-success px-3 py-2 fw-bold';
+                btn.innerHTML = '<i class="fa-solid fa-circle me-1"></i> ONLINE (Available)';
+            } else {
+                btn.className = 'btn btn-danger px-3 py-2 fw-bold';
+                btn.innerHTML = '<i class="fa-solid fa-circle-pause me-1"></i> OFFLINE (On Break)';
+            }
+        }
+
+        async function toggleDuty() {
+            const nextOnline = !currentPorter.isOnline;
+            try {
+                await API.updatePorterAvailability({
+                    porterId: currentPorter.porterId,
+                    isOnline: nextOnline,
+                    platform: currentPorter.currentPlatform || 1
+                });
+            } catch(e) {}
+
+            currentPorter.isOnline = nextOnline;
+            updateDutyButton(nextOnline);
+            showNotification(`Duty status updated to ${nextOnline ? 'ONLINE' : 'OFFLINE'}`, 'info');
+
+            // Persist
+            const raw = localStorage.getItem('sp_user');
+            if (raw) {
+                try {
+                    const u = JSON.parse(raw);
+                    u.data.isOnline = nextOnline;
+                    localStorage.setItem('sp_user', JSON.stringify(u));
+                } catch(e) {}
+            }
+        }
+
+        async function loadJobs() {
+            // Check for new incoming requests
+            try {
+                const reqRes = await API.getPorterRequests(currentPorter.stationId || 1);
+                const reqs = (reqRes.data || []).filter(b => b.bookingStatus === 'REQUESTED');
+                const reqBanner = document.getElementById('newRequestBanner');
+                if (reqs.length > 0) {
+                    reqBanner.style.setProperty('display', 'flex', 'important');
+                    document.getElementById('newRequestSummary').textContent = `${reqs.length} Luggage Request(s) Waiting at ${currentPorter.stationName || 'Station'}!`;
+                    document.getElementById('newRequestRoute').textContent = `${reqs[0].pickupLocationName || 'Gate 1'} ➔ ${reqs[0].dropLocationName || 'Platform 1'} (Fare: ₹${Number(reqs[0].totalAmount||0).toFixed(2)})`;
+                } else {
+                    reqBanner.style.setProperty('display', 'none', 'important');
+                }
+            } catch(e) {}
+
+            try {
+                const res = await API.getPorterHistory(currentPorter.porterId);
+                renderJobs(res.data || []);
+            } catch(e) {
+                renderJobs([]);
+            }
+        }
+
+        function renderJobs(jobs) {
+            const tbody = document.getElementById('porterJobsBody');
+            tbody.innerHTML = '';
+            let activeAssignment = null;
+
+            if (jobs.length > 0) {
+                jobs.forEach(j => {
+                    if (['ACCEPTED', 'PORTER_ARRIVING', 'SERVICE_STARTED'].includes(j.bookingStatus) && !activeAssignment) {
+                        activeAssignment = j;
+                    }
+                    const tr = document.createElement('tr');
+                    tr.innerHTML = `
+                        <td><strong>${j.bookingCode}</strong></td>
+                        <td>${j.passengerName || 'Rajesh Sharma'} ${j.passengerPhone ? `(${j.passengerPhone})` : ''}</td>
+                        <td><small>${j.luggage ? `${j.luggage.bagCount || 1}x ${j.luggage.category || 'Trolley'} (${j.luggage.weightKg || 15} kg)` : 'Standard baggage'}</small></td>
+                        <td><strong class="text-success">₹${Number(j.totalAmount||0).toFixed(2)}</strong></td>
+                        <td><span class="badge ${j.bookingStatus === 'COMPLETED' ? 'bg-success' : 'bg-warning text-dark'}">${j.bookingStatus}</span></td>
+                    `;
+                    tbody.appendChild(tr);
+                });
+            } else {
+                tbody.innerHTML = `<tr><td colspan="5" class="text-center py-4 text-muted">
+                    <i class="fa-solid fa-inbox fa-2x mb-2 d-block"></i>
+                    No jobs recorded yet.
+                </td></tr>`;
+            }
+
+            if (activeAssignment) {
+                document.getElementById('activeJobSection').style.display = 'block';
+                document.getElementById('activeJobCode').textContent = activeAssignment.bookingCode;
+                document.getElementById('activeJobPass').textContent = `${activeAssignment.passengerName || 'Passenger'} (${activeAssignment.passengerPhone || ''})`;
+                document.getElementById('activeJobPickup').textContent = activeAssignment.pickupLocationName || 'Gate 1';
+            }
+        }
+
+        function handlePorterLogout() {
+            try { API.logout(); } catch(e) {}
+            localStorage.removeItem('sp_user');
+            window.location.href = '../index.html';
+        }
+
+        function openDeletePorterModal() {
+            document.getElementById('modalDelBadge').textContent = currentPorter.badgeNumber || 'CK-101';
+            document.getElementById('modalDelName').textContent = currentPorter.fullName || 'Coolie';
+            document.getElementById('modalDelStation').textContent = currentPorter.stationName || 'Station Desk';
+            const modal = new bootstrap.Modal(document.getElementById('deletePorterModal'));
+            modal.show();
+        }
+
+        async function executeDeletePorterAccount() {
+            const btn = document.getElementById('confirmDeletePorterBtn');
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin me-1"></i> Deleting...';
+
+            try {
+                await API.deletePorter(currentPorter.porterId);
+            } catch(e) {
+                console.warn('Backend delete note:', e);
+            }
+
+            localStorage.removeItem('sp_user');
+            const modalEl = document.getElementById('deletePorterModal');
+            const modalInst = bootstrap.Modal.getInstance(modalEl);
+            if (modalInst) modalInst.hide();
+
+            alert(`✅ Porter Account (${currentPorter.badgeNumber || 'Coolie'}) has been deleted successfully.`);
+            window.location.href = '../index.html';
+        }
+
+        initPorterDashboard();
+    </script>
+</body>
+</html>

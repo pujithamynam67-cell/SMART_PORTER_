@@ -1,0 +1,12 @@
+.env
+*.env.local
+target/
+bin/
+*.class
+*.war
+.idea/
+*.iml
+.project
+.classpath
+.settings/
+.vscode/

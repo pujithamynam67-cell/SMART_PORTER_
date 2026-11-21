@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Contact Us - Smart Porter</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <link href="assets/css/style.css" rel="stylesheet">
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg sp-navbar sticky-top">
+        <div class="container">
+            <a class="navbar-brand sp-brand" href="index.html">
+                <i class="fa-solid fa-cart-flatbed-suitcase text-warning"></i>
+                Smart<span>Porter</span>
+            </a>
+            <div class="collapse navbar-collapse" id="spNav">
+                <ul class="navbar-nav me-auto mb-2 mb-lg-0 ms-lg-4">
+                    <li class="nav-item"><a class="nav-link sp-nav-link" href="index.html">Home</a></li>
+                    <li class="nav-item"><a class="nav-link sp-nav-link" href="about.html">About Us</a></li>
+                    <li class="nav-item"><a class="nav-link sp-nav-link" href="services.html">Services</a></li>
+                    <li class="nav-item"><a class="nav-link sp-nav-link active" href="contact.html">Contact</a></li>
+                </ul>
+                <div class="d-flex align-items-center gap-2">
+                    <a href="auth/login.html" class="btn btn-sp-navy"><i class="fa-solid fa-user me-1"></i> Sign In</a>
+                    <a href="passenger/book.html" class="btn btn-sp-orange"><i class="fa-solid fa-bolt me-1"></i> Book a Porter</a>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <div class="py-5 bg-white border-bottom">
+        <div class="container text-center">
+            <span class="badge bg-warning-subtle text-warning fw-bold px-3 py-2 text-uppercase mb-2">24x7 Railway Assistance</span>
+            <h1 class="fw-bold text-navy">Get in Touch with Station Desk</h1>
+            <p class="text-muted col-lg-8 mx-auto">We are ready to assist you across all major Indian Railway hubs.</p>
+        </div>
+    </div>
+
+    <div class="container py-5" id="helpdesk">
+        <div class="row g-5">
+            <div class="col-lg-5">
+                <h4 class="fw-bold text-navy mb-4"><i class="fa-solid fa-headset text-warning me-2"></i> Station Helpdesk & Support</h4>
+                <div class="d-flex gap-3 mb-3 p-3 bg-light rounded-3 border">
+                    <div class="text-warning fs-3"><i class="fa-solid fa-phone-volume"></i></div>
+                    <div>
+                        <strong class="d-block text-navy">Emergency Sahayak Helpline</strong>
+                        <a href="tel:1800111266" class="fs-5 fw-bold text-warning text-decoration-none">1800-111-COOLIE</a>
+                        <div class="text-muted small">Toll-free 24x7 for all Indian Railway passengers & coolies</div>
+                    </div>
+                </div>
+                <div class="d-flex gap-3 mb-3 p-3 bg-light rounded-3 border">
+                    <div class="text-warning fs-3"><i class="fa-solid fa-envelope-open-text"></i></div>
+                    <div>
+                        <strong class="d-block text-navy">Email Support</strong>
+                        <a href="mailto:support@smartporter.rail.gov.in" class="text-primary fw-semibold text-decoration-none">support@smartporter.rail.gov.in</a>
+                        <div class="text-muted small">Official IRCTC / Smart Porter resolution desk</div>
+                    </div>
+                </div>
+                <div class="d-flex gap-3 p-3 bg-light rounded-3 border">
+                    <div class="text-warning fs-3"><i class="fa-solid fa-location-dot"></i></div>
+                    <div>
+                        <strong class="d-block text-navy">Station Concourse Counters</strong>
+                        <div class="text-muted small mb-1">Physical Sahayak Helpdesks located at:</div>
+                        <ul class="text-muted small ps-3 mb-0">
+                            <li><strong>NDLS:</strong> Main Entrance Concourse (Paharganj & Ajmeri Gate)</li>
+                            <li><strong>CSMT:</strong> Star Chamber Main Concourse Hub</li>
+                            <li><strong>HWH:</strong> New Complex Terminal Helpdesk</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-7">
+                <div class="sp-card">
+                    <h5 class="fw-bold text-navy mb-3">Send Us a Query or Complaint</h5>
+                    <form onsubmit="alert('Thank you! Your message has been routed to the respective station master.'); return false;">
+                        <div class="row g-3 mb-3">
+                            <div class="col-md-6">
+                                <label class="form-label small fw-bold text-muted">Full Name</label>
+                                <input type="text" class="form-control" required>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label small fw-bold text-muted">Mobile Number</label>
+                                <input type="tel" class="form-control" required>
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label small fw-bold text-muted">Booking Reference / PNR (Optional)</label>
+                            <input type="text" class="form-control" placeholder="e.g. SP-2026-XXXX">
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label small fw-bold text-muted">Message / Feedback</label>
+                            <textarea class="form-control" rows="4" required></textarea>
+                        </div>
+                        <button type="submit" class="btn btn-sp-orange">Submit Inquiry</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <footer class="sp-footer mt-auto">
+        <div class="container text-center small text-white-50">
+            &copy; 2026 Smart Porter. Built as a BTech DBMS Project.
+        </div>
+    </footer>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

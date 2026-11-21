@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Trip History - Smart Porter</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <link href="../assets/css/style.css" rel="stylesheet">
+</head>
+<body class="bg-light">
+<nav class="navbar navbar-expand-lg sp-navbar sticky-top">
+    <div class="container">
+        <a class="navbar-brand sp-brand" href="../index.html">
+            <i class="fa-solid fa-cart-flatbed-suitcase text-warning"></i> Smart<span>Porter</span>
+            <span class="badge bg-danger ms-2 small">COOLIE DESK</span>
+        </a>
+        <div class="ms-auto d-flex gap-2">
+            <a href="profile.html" class="btn btn-outline-light btn-sm"><i class="fa-solid fa-user me-1"></i>Profile</a>
+            <a href="dashboard.html" class="btn btn-outline-light btn-sm"><i class="fa-solid fa-arrow-left me-1"></i>Dashboard</a>
+        </div>
+    </div>
+</nav>
+<div class="container py-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h4 class="fw-bold text-navy mb-0">My Trip History</h4>
+            <small class="text-muted">All completed luggage mobility trips and collected earnings</small>
+        </div>
+        <div class="text-end">
+            <div class="fw-bold fs-4 text-success" id="totalEarnings">₹0.00</div>
+            <small class="text-muted">Total Earnings</small>
+        </div>
+    </div>
+    <div class="row g-3" id="historyList">
+        <div class="col-12 text-center py-5 text-muted">
+            <i class="fa-solid fa-spinner fa-spin fa-2x mb-2 d-block text-warning"></i>
+            Loading trip history...
+        </div>
+    </div>
+</div>
+<script src="../assets/js/api.js"></script>
+<script>
+async function loadHistory() {
+    const raw = localStorage.getItem('sp_user');
+    let porterId = 1;
+    if (raw) { try { const u=JSON.parse(raw); if(u.data) porterId=u.data.porterId; } catch(e){} }
+
+    try {
+        const res = await API.getPorterHistory(porterId);
+        const trips = res.data || [];
+        const container = document.getElementById('historyList');
+
+        if (!trips.length) {
+            container.innerHTML = `<div class="col-12 text-center py-5">
+                <i class="fa-solid fa-box-open fa-3x text-muted mb-3 d-block"></i>
+                <h6 class="text-muted">No completed trips recorded yet.</h6>
+                <a href="requests.html" class="btn btn-sp-orange mt-2">View Pending Requests</a></div>`;
+            return;
+        }
+
+        let total = 0;
+        trips.forEach(t => { total += parseFloat(t.totalAmount||0); });
+        document.getElementById('totalEarnings').textContent = `₹${total.toLocaleString('en-IN')}`;
+
+        const statusColors = { COMPLETED:'success', CANCELLED:'danger', SERVICE_STARTED:'primary', ACCEPTED:'info' };
+        container.innerHTML = trips.map(t => {
+            const sc = statusColors[t.bookingStatus]||'secondary';
+            const dt = t.bookingTime ? new Date(t.bookingTime).toLocaleString('en-IN') : 'Recent';
+            return `<div class="col-md-6">
+                <div class="card border-0 shadow-sm rounded-4 p-3 h-100">
+                    <div class="d-flex justify-content-between align-items-start mb-2">
+                        <code class="text-primary fw-bold">${t.bookingCode||'—'}</code>
+                        <span class="badge bg-${sc}-subtle text-${sc} border border-${sc}-subtle">${t.bookingStatus}</span>
+                    </div>
+                    <div class="small mb-1"><i class="fa-solid fa-train text-warning me-1"></i>${t.stationName||'Station'}</div>
+                    <div class="small mb-1 text-muted">${t.luggage ? `${t.luggage.bagCount || 1}x ${t.luggage.category || 'Trolley'} (${t.luggage.weightKg || 15} kg)` : 'Standard baggage'}</div>
+                    <div class="d-flex justify-content-between align-items-center mt-2 border-top pt-2">
+                        <small class="text-muted">${dt}</small>
+                        <strong class="text-success fs-5">₹${Number(t.totalAmount||0).toFixed(2)}</strong>
+                    </div>
+                    ${t.feedback ? `<div class="mt-2 small text-muted bg-light p-2 rounded">Rating: <span class="text-warning">${'★'.repeat(Math.round(t.feedback.rating||5))}</span> "${t.feedback.comments||'Good'}"</div>` : ''}
+                </div></div>`;
+        }).join('');
+    } catch(e) {
+        document.getElementById('historyList').innerHTML = `<div class="col-12 text-center py-5">
+            <p class="text-muted">No trip records found.</p></div>`;
+    }
+}
+loadHistory();
+</script>
+</body>
+</html>

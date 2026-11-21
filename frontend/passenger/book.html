@@ -1,0 +1,588 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Book a Porter - Smart Porter</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <link href="../assets/css/style.css" rel="stylesheet">
+    <style>
+        .porter-card-selectable {
+            border: 2px solid #e2e8f0; border-radius: 14px; cursor: pointer;
+            transition: all 0.2s ease; background: #fff; position: relative;
+        }
+        .porter-card-selectable:hover {
+            border-color: #f97316; box-shadow: 0 6px 20px rgba(249,115,22,0.15); transform: translateY(-2px);
+        }
+        .porter-card-selectable.selected {
+            border-color: #f97316; background: linear-gradient(135deg, #fff7ed 0%, #fff 100%);
+            box-shadow: 0 6px 22px rgba(249,115,22,0.25);
+        }
+        .auto-dispatch-card {
+            background: linear-gradient(135deg, #1e3a5f 0%, #2563eb 100%);
+            color: white; border-radius: 14px; cursor: pointer;
+            border: 2px solid transparent; transition: all 0.2s ease;
+        }
+        .auto-dispatch-card:hover, .auto-dispatch-card.selected {
+            transform: translateY(-2px); box-shadow: 0 6px 20px rgba(37,99,235,0.35);
+            border-color: #f97316;
+        }
+        .porter-badge-pill {
+            background: linear-gradient(135deg, #1e3a5f, #2d5f8a);
+            color: #fff; border-radius: 6px; padding: 3px 8px;
+            font-size: 11px; font-weight: 700; letter-spacing: 0.5px;
+        }
+        .step-num {
+            width: 30px; height: 30px; border-radius: 50%;
+            background: linear-gradient(135deg, #f97316, #fb923c);
+            color: #fff; display: inline-flex; align-items: center;
+            justify-content: center; font-weight: 700; font-size: 13px; flex-shrink: 0;
+        }
+        .fare-row { display: flex; justify-content: space-between; padding: 6px 0; border-bottom: 1px dashed #e2e8f0; }
+        .fare-row:last-child { border-bottom: none; }
+        .stars { color: #f59e0b; }
+        .category-hint { font-size: 12px; color: #64748b; margin-top: 4px; }
+        .avatar-circle {
+            width: 48px; height: 48px; border-radius: 50%;
+            background: linear-gradient(135deg, #f97316, #ea580c);
+            color: white; display: flex; align-items: center; justify-content: center;
+            font-size: 1.2rem; font-weight: bold; flex-shrink: 0;
+        }
+    </style>
+</head>
+<body class="bg-light">
+
+<nav class="navbar navbar-expand-lg sp-navbar sticky-top">
+    <div class="container">
+        <a class="navbar-brand sp-brand" href="../index.html">
+            <i class="fa-solid fa-cart-flatbed-suitcase text-warning"></i>
+            Smart<span>Porter</span>
+        </a>
+        <div class="ms-auto d-flex align-items-center gap-3">
+            <span class="text-white small d-none d-md-inline" id="passengerGreeting">Hi, Passenger</span>
+            <a href="dashboard.html" class="btn btn-outline-light btn-sm">
+                <i class="fa-solid fa-arrow-left me-1"></i> Dashboard
+            </a>
+        </div>
+    </div>
+</nav>
+
+<div class="container py-4">
+    <div class="row justify-content-center">
+        <div class="col-lg-10">
+
+            <div class="text-center mb-4">
+                <span class="badge bg-warning text-dark px-3 py-2 rounded-pill mb-2"><i class="fa-solid fa-bolt me-1"></i> Quick Luggage Assistance</span>
+                <h3 class="fw-bold text-navy">Book a Railway Luggage Porter (Coolie)</h3>
+                <p class="text-muted small">Select your station, luggage weight, and choose your preferred licensed porter or auto-dispatch.</p>
+            </div>
+
+            <!-- Progress Step Indicators -->
+            <div class="d-flex flex-wrap gap-2 mb-4 justify-content-center small">
+                <span class="badge bg-warning text-dark px-3 py-2 rounded-pill"><i class="fa-solid fa-train me-1"></i> 1. Station</span>
+                <i class="fa-solid fa-chevron-right text-muted align-self-center"></i>
+                <span class="badge bg-warning text-dark px-3 py-2 rounded-pill"><i class="fa-solid fa-route me-1"></i> 2. Route</span>
+                <i class="fa-solid fa-chevron-right text-muted align-self-center"></i>
+                <span class="badge bg-warning text-dark px-3 py-2 rounded-pill"><i class="fa-solid fa-suitcase-rolling me-1"></i> 3. Luggage</span>
+                <i class="fa-solid fa-chevron-right text-muted align-self-center"></i>
+                <span class="badge bg-warning text-dark px-3 py-2 rounded-pill"><i class="fa-solid fa-person-carrying-box me-1"></i> 4. Porter</span>
+                <i class="fa-solid fa-chevron-right text-muted align-self-center"></i>
+                <span class="badge bg-secondary px-3 py-2 rounded-pill"><i class="fa-solid fa-check-circle me-1"></i> 5. Confirm</span>
+            </div>
+
+            <form id="bookingForm">
+
+                <!-- STEP 1: STATION -->
+                <div class="card border-0 shadow-sm rounded-4 p-4 mb-3">
+                    <div class="d-flex align-items-center gap-2 mb-3">
+                        <span class="step-num">1</span>
+                        <div>
+                            <h5 class="fw-bold text-navy mb-0">Select Railway Station</h5>
+                            <small class="text-muted">Choose your current or arrival station (25+ major stations supported)</small>
+                        </div>
+                    </div>
+                    <select id="stationSelect" class="form-select form-select-lg" required>
+                        <option value="" disabled selected>Loading stations...</option>
+                    </select>
+                    <div id="stationInfo" class="mt-2 small text-muted d-none">
+                        <i class="fa-solid fa-circle-info text-info me-1"></i>
+                        <span id="stationInfoText"></span>
+                    </div>
+                </div>
+
+                <!-- STEP 2: ROUTE -->
+                <div class="card border-0 shadow-sm rounded-4 p-4 mb-3">
+                    <div class="d-flex align-items-center gap-2 mb-3">
+                        <span class="step-num">2</span>
+                        <div>
+                            <h5 class="fw-bold text-navy mb-0">Pickup & Drop Route</h5>
+                            <small class="text-muted">Specify where the porter will meet you and deliver your baggage</small>
+                        </div>
+                    </div>
+                    <div class="row g-3 mb-3">
+                        <div class="col-md-6">
+                            <label class="form-label small fw-bold text-muted">
+                                <i class="fa-solid fa-circle-dot text-success me-1"></i>Pickup Point (e.g. Entrance Gate / Taxi Stand)
+                            </label>
+                            <select id="pickupSelect" class="form-select" required>
+                                <option value="" disabled selected>Select station first</option>
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label small fw-bold text-muted">
+                                <i class="fa-solid fa-location-dot text-danger me-1"></i>Drop Destination (e.g. Train Platform / Coach)
+                            </label>
+                            <select id="dropSelect" class="form-select" required>
+                                <option value="" disabled selected>Select station first</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="row g-2">
+                        <div class="col-md-4">
+                            <label class="form-label small fw-bold text-muted">Train Number / Name (Optional)</label>
+                            <input type="text" id="trainNo" class="form-control" placeholder="e.g. 12004 Shatabdi">
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label small fw-bold text-muted">Coach (Optional)</label>
+                            <input type="text" id="coachNo" class="form-control" placeholder="e.g. B2 / S4">
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label small fw-bold text-muted">Seat / Berth (Optional)</label>
+                            <input type="text" id="seatNo" class="form-control" placeholder="e.g. 36 Window">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- STEP 3: LUGGAGE & DYNAMIC PRICING -->
+                <div class="card border-0 shadow-sm rounded-4 p-4 mb-3">
+                    <div class="d-flex align-items-center gap-2 mb-3">
+                        <span class="step-num">3</span>
+                        <div>
+                            <h5 class="fw-bold text-navy mb-0">Luggage Details & Live Fare Calculation</h5>
+                            <small class="text-muted">Standard IRCTC tariff calculated dynamically by category & weight</small>
+                        </div>
+                    </div>
+                    <div class="row g-3 mb-3">
+                        <div class="col-md-5">
+                            <label class="form-label small fw-bold text-muted">Luggage Category</label>
+                            <select id="luggageCategory" class="form-select">
+                                <option value="Backpack"          data-base="60"  data-rate="2">🎒 Backpack / Light Bag (₹60 + ₹2/kg)</option>
+                                <option value="Cabin Bag"         data-base="80"  data-rate="3">💼 Cabin Bag / Small Trolley (₹80 + ₹3/kg)</option>
+                                <option value="Standard Bag"      data-base="100" data-rate="4">🧳 Standard Bag (₹100 + ₹4/kg)</option>
+                                <option value="Trolley Case"      data-base="120" data-rate="5" selected>🧳 Trolley Case / Medium Suitcase (₹120 + ₹5/kg)</option>
+                                <option value="Heavy Suitcase"    data-base="140" data-rate="6">🧳 Heavy Suitcase (₹140 + ₹6/kg)</option>
+                                <option value="Fragile Carton"    data-base="150" data-rate="5.5">📦 Fragile Carton / Box (₹150 + ₹5.5/kg)</option>
+                                <option value="Electronics Box"   data-base="180" data-rate="7">📺 Electronics Box / Appliance (₹180 + ₹7/kg)</option>
+                                <option value="Oversized Parcel"  data-base="200" data-rate="7">📦 Oversized Parcel / Large Carton (₹200 + ₹7/kg)</option>
+                                <option value="Medical Equipment" data-base="200" data-rate="6">🏥 Medical Equipment / Wheelchair (₹200 + ₹6/kg)</option>
+                                <option value="Bicycle Parts"     data-base="250" data-rate="8">🚲 Bicycle / Two-Wheeler Parts (₹250 + ₹8/kg)</option>
+                                <option value="Group Baggage"     data-base="300" data-rate="5">👨‍👩‍👧‍👦 Group Baggage — 5+ bags (₹300 + ₹5/kg)</option>
+                            </select>
+                            <div class="category-hint" id="categoryHint">Medium suitcase with handle and wheels. Moderate weight.</div>
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label small fw-bold text-muted">Total Bags</label>
+                            <input type="number" id="bagCount" class="form-control" value="1" min="1" max="25" required>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label small fw-bold text-muted">Total Weight (KG)</label>
+                            <div class="input-group">
+                                <input type="number" id="weightKg" class="form-control" value="15" min="1" max="350" required>
+                                <span class="input-group-text">KG</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row g-3 mb-3">
+                        <div class="col-md-6">
+                            <div class="form-check p-2 rounded bg-light border">
+                                <input class="form-check-input ms-1 me-2" type="checkbox" id="isFragile">
+                                <label class="form-check-label small fw-semibold" for="isFragile">
+                                    <i class="fa-solid fa-wine-glass text-danger me-1"></i>
+                                    Fragile Items (Delicate handling surcharge: +₹30)
+                                </label>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <input type="text" id="specialNotes" class="form-control" placeholder="Special notes (e.g. Meet near Gate 2 ATM)">
+                        </div>
+                    </div>
+
+                    <!-- Live Fare Calculation Card -->
+                    <div class="rounded-3 border p-3 bg-light">
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <span class="fw-bold text-navy small">
+                                <i class="fa-solid fa-calculator text-warning me-1"></i>
+                                Live Transparent Tariff Breakdown
+                            </span>
+                            <span class="badge bg-success-subtle text-success">IRCTC Compliant</span>
+                        </div>
+                        <div class="fare-row">
+                            <span class="text-muted small">Base Luggage Fare</span>
+                            <span class="fw-semibold small" id="fareBase">₹120.00</span>
+                        </div>
+                        <div class="fare-row">
+                            <span class="text-muted small">Weight Surcharge (<span id="fareWeightDesc">15 kg × ₹5</span>)</span>
+                            <span class="fw-semibold small" id="fareWeight">₹75.00</span>
+                        </div>
+                        <div class="fare-row" id="fragileRow" style="display:none">
+                            <span class="text-muted small">Fragile Baggage Care Fee</span>
+                            <span class="fw-semibold small text-danger" id="fareFragile">₹30.00</span>
+                        </div>
+                        <div class="fare-row pt-2">
+                            <span class="fw-bold text-navy">Total Service Amount</span>
+                            <span class="fw-bold fs-4 text-warning" id="displayFare">₹195.00</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- STEP 4: PORTER SELECTION (FULL DETAILS SHOWN) -->
+                <div class="card border-0 shadow-sm rounded-4 p-4 mb-3">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <div class="d-flex align-items-center gap-2">
+                            <span class="step-num">4</span>
+                            <div>
+                                <h5 class="fw-bold text-navy mb-0">Select Licensed Porter (Coolie)</h5>
+                                <small class="text-muted">Pick a specific verified coolie or select Auto-Dispatch for the fastest arrival</small>
+                            </div>
+                        </div>
+                        <button type="button" class="btn btn-sm btn-outline-primary" onclick="loadPortersForSelectedStation()">
+                            <i class="fa-solid fa-arrows-rotate me-1"></i> Refresh
+                        </button>
+                    </div>
+
+                    <div id="portersListContainer" class="row g-3">
+                        <div class="col-12 text-center py-4 text-muted">
+                            <i class="fa-solid fa-spinner fa-spin fa-2x mb-2 d-block text-warning"></i>
+                            Loading licensed porters for this station...
+                        </div>
+                    </div>
+                    <input type="hidden" id="selectedPorterId" value="0">
+                </div>
+
+                <!-- STEP 5: CONFIRMATION & DISPATCH -->
+                <div class="card border-0 shadow-sm rounded-4 p-4">
+                    <div class="d-flex align-items-center gap-2 mb-3">
+                        <span class="step-num">5</span>
+                        <div>
+                            <h5 class="fw-bold text-navy mb-0">Confirm & Dispatch Porter</h5>
+                            <small class="text-muted">Instant coolie assignment with real-time tracking to your train coach</small>
+                        </div>
+                    </div>
+                    <div class="d-flex gap-3 align-items-center flex-wrap">
+                        <div class="flex-grow-1">
+                            <div class="d-flex justify-content-between small text-muted mb-1">
+                                <span>Total Payable</span>
+                                <strong class="text-warning fs-4" id="confirmFareDisplay">₹195.00</strong>
+                            </div>
+                            <div class="text-muted" style="font-size:12px">
+                                <i class="fa-solid fa-shield-check text-success me-1"></i>
+                                Cashless UPI / Cash payment collected only after delivery.
+                            </div>
+                        </div>
+                        <button type="submit" class="btn btn-sp-orange btn-lg px-5 py-3 fw-bold shadow" id="confirmBtn">
+                            <i class="fa-solid fa-bolt me-2"></i> Confirm Porter Booking
+                        </button>
+                    </div>
+                </div>
+
+            </form>
+        </div>
+    </div>
+</div>
+
+<script src="../assets/js/api.js"></script>
+<script>
+    let stationsData = [];
+    let currentPassengerId = 1;
+
+    const categoryDescriptions = {
+        'Backpack':          'Light backpack, handbag, or small duffle. Up to ~10 kg.',
+        'Cabin Bag':         'Small cabin trolley or laptop bag. Light to medium weight.',
+        'Standard Bag':      'Regular travel bags, duffel bags, or medium suitcases.',
+        'Trolley Case':      'Medium suitcase with handle and wheels. Moderate weight.',
+        'Heavy Suitcase':    'Large, heavy hardcase suitcases. Usually 25–35 kg.',
+        'Fragile Carton':    'Cardboard boxes with breakable or delicate items.',
+        'Electronics Box':   'TV, washing machine, fridge, or household appliances.',
+        'Oversized Parcel':  'Large carton or bundle wider than standard luggage.',
+        'Medical Equipment': 'Wheelchair, oxygen cylinder, or medical devices.',
+        'Bicycle Parts':     'Bicycle, cycle parts, or two-wheeler components.',
+        'Group Baggage':     'Five or more bags for a group or family travel.',
+    };
+
+    async function initPage() {
+        // Authenticate from local session - require login before booking
+        const raw = localStorage.getItem('sp_user');
+        let loggedIn = false;
+        if (raw) {
+            try {
+                const u = JSON.parse(raw);
+                if (u.type === 'PASSENGER' && u.data) {
+                    currentPassengerId = u.data.passengerId;
+                    document.getElementById('passengerGreeting').textContent = `Hi, ${u.data.fullName || 'Passenger'}`;
+                    loggedIn = true;
+                }
+            } catch(e) {}
+        }
+
+        if (!loggedIn) {
+            alert('Please sign in or create a passenger account before booking a porter.');
+            window.location.href = '../auth/login.html?redirect=../passenger/book.html';
+            return;
+        }
+
+        try {
+            const res = await API.getStations();
+            stationsData = res.data || [];
+            const sel = document.getElementById('stationSelect');
+            sel.innerHTML = '';
+
+            stationsData.forEach((st, idx) => {
+                const opt = new Option(
+                    `${st.stationCode} — ${st.stationName}, ${st.city} (${st.state || ''}) · [${st.totalPlatforms || 4} Platforms]`,
+                    st.stationId
+                );
+                if (idx === 0) opt.selected = true;
+                sel.appendChild(opt);
+            });
+            onStationChange();
+        } catch(e) {
+            showNotification('Could not load station list', 'danger');
+        }
+    }
+
+    async function onStationChange() {
+        const stId = parseInt(document.getElementById('stationSelect').value) || 1;
+        const st = stationsData.find(s => s.stationId === stId) || stationsData[0];
+        if (st) {
+            document.getElementById('stationInfoText').textContent =
+                `${st.stationName} · ${st.city}, ${st.state || ''} · ${st.totalPlatforms || 4} Platforms · 100% Licensed Coolies Available`;
+            document.getElementById('stationInfo').classList.remove('d-none');
+        }
+
+        const pickupSel = document.getElementById('pickupSelect');
+        const dropSel = document.getElementById('dropSelect');
+        pickupSel.innerHTML = '<option disabled selected>Loading locations...</option>';
+        dropSel.innerHTML = '<option disabled selected>Loading locations...</option>';
+
+        try {
+            const res = await API.getStationLocations(stId);
+            const locs = res.data || [];
+            pickupSel.innerHTML = '';
+            dropSel.innerHTML = '';
+            locs.forEach((loc, idx) => {
+                const opt1 = new Option(`📍 ${loc.locationName} [${loc.locationType}]`, loc.locationId);
+                if (idx === 0) opt1.selected = true;
+                pickupSel.appendChild(opt1);
+
+                const opt2 = new Option(`📍 ${loc.locationName} [${loc.locationType}]`, loc.locationId);
+                if (idx === 1 || (locs.length === 1 && idx === 0)) opt2.selected = true;
+                dropSel.appendChild(opt2);
+            });
+        } catch(e) {}
+
+        calculateFare();
+        loadPortersForSelectedStation();
+    }
+
+    function updateCategoryHint() {
+        const val = document.getElementById('luggageCategory').value;
+        document.getElementById('categoryHint').textContent = categoryDescriptions[val] || '';
+        calculateFare();
+    }
+
+    async function calculateFare() {
+        const sel = document.getElementById('luggageCategory');
+        const opt = sel.options[sel.selectedIndex] || sel.options[3];
+        const baseCharge = parseFloat(opt.dataset.base) || 120;
+        const ratePerKg  = parseFloat(opt.dataset.rate) || 5;
+        const weight     = parseFloat(document.getElementById('weightKg').value) || 15;
+        const isFragile  = document.getElementById('isFragile').checked;
+
+        const weightCharge = weight * ratePerKg;
+        const fragileCharge = isFragile ? 30 : 0;
+        const totalEstimate = baseCharge + weightCharge + fragileCharge;
+
+        document.getElementById('fareBase').textContent = `₹${baseCharge.toFixed(2)}`;
+        document.getElementById('fareWeightDesc').textContent = `${weight} kg × ₹${ratePerKg}`;
+        document.getElementById('fareWeight').textContent = `₹${weightCharge.toFixed(2)}`;
+        document.getElementById('fareFragile').textContent = `₹${fragileCharge.toFixed(2)}`;
+        document.getElementById('fragileRow').style.display = isFragile ? 'flex' : 'none';
+        document.getElementById('displayFare').textContent = `₹${totalEstimate.toFixed(2)}`;
+        document.getElementById('confirmFareDisplay').textContent = `₹${totalEstimate.toFixed(2)}`;
+    }
+
+    function renderStars(rating) {
+        const r = parseFloat(rating) || 4.8;
+        const full = Math.floor(r);
+        const half = r - full >= 0.5 ? 1 : 0;
+        const empty = 5 - full - half;
+        let s = '';
+        for (let i = 0; i < full; i++) s += '<i class="fa-solid fa-star"></i>';
+        if (half) s += '<i class="fa-solid fa-star-half-stroke"></i>';
+        for (let i = 0; i < empty; i++) s += '<i class="fa-regular fa-star"></i>';
+        return `<span class="stars">${s}</span> <strong>${r.toFixed(2)}</strong>`;
+    }
+
+    async function loadPortersForSelectedStation() {
+        const stId = parseInt(document.getElementById('stationSelect').value) || 1;
+        const container = document.getElementById('portersListContainer');
+        container.innerHTML = `
+            <div class="col-12 text-center py-4 text-muted">
+                <i class="fa-solid fa-spinner fa-spin fa-2x mb-2 d-block text-warning"></i>
+                Fetching licensed porters for this station...
+            </div>`;
+
+        try {
+            const res = await API.getAvailablePorters(stId);
+            const porters = res.data || [];
+            container.innerHTML = '';
+
+            // 1. AUTO-DISPATCH CARD (Fastest Available)
+            const autoCol = document.createElement('div');
+            autoCol.className = 'col-12';
+            autoCol.innerHTML = `
+                <div class="auto-dispatch-card p-3 selected mb-1" onclick="selectPorter(0, this)" id="autoDispatchCard">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div class="d-flex align-items-center gap-3">
+                            <div class="rounded-circle bg-warning text-dark d-flex align-items-center justify-content-center" style="width:48px;height:48px;font-size:1.3rem;">
+                                <i class="fa-solid fa-bolt"></i>
+                            </div>
+                            <div>
+                                <span class="badge bg-warning text-dark mb-1">⚡ FASTEST DISPATCH (RECOMMENDED)</span>
+                                <h6 class="fw-bold mb-0">Auto-Dispatch Nearest Available Coolie</h6>
+                                <small class="opacity-75">Broadcasts your luggage request to all online porters at this station. 2-3 mins ETA.</small>
+                            </div>
+                        </div>
+                        <span class="badge bg-light text-dark px-3 py-2 fw-bold">SELECTED</span>
+                    </div>
+                </div>`;
+            container.appendChild(autoCol);
+
+            // 2. INDIVIDUAL LICENSED PORTER CARDS
+            if (porters.length > 0) {
+                porters.forEach(p => {
+                    const col = document.createElement('div');
+                    col.className = 'col-md-6';
+                    col.innerHTML = `
+                        <div class="porter-card-selectable p-3" onclick="selectPorter(${p.porterId}, this)">
+                            <div class="d-flex gap-3">
+                                <div class="avatar-circle">
+                                    ${p.fullName.charAt(0)}
+                                </div>
+                                <div class="flex-grow-1">
+                                    <div class="d-flex justify-content-between align-items-start mb-1">
+                                        <div>
+                                            <span class="porter-badge-pill me-1">${p.badgeNumber}</span>
+                                            <span class="badge bg-success-subtle text-success border border-success-subtle" style="font-size:10px;">
+                                                <i class="fa-solid fa-circle fa-2xs me-1"></i>AVAILABLE
+                                            </span>
+                                        </div>
+                                        <div class="text-end">
+                                            <span class="badge bg-light text-secondary border">Platform ${p.currentPlatform || 1}</span>
+                                        </div>
+                                    </div>
+                                    <h6 class="fw-bold text-navy mb-0">${p.fullName}</h6>
+                                    <div class="small my-1">${renderStars(p.ratingAvg)} <span class="text-muted">(${p.totalCompletedBookings || 0} trips)</span></div>
+                                    <div class="text-muted" style="font-size:11px;">
+                                        <i class="fa-solid fa-phone me-1 text-primary"></i>${p.phone || '9876543210'} · 
+                                        <i class="fa-solid fa-id-card me-1 text-danger"></i>${p.verificationStatus || 'APPROVED'} Sahayak
+                                    </div>
+                                    <div class="text-muted mt-1" style="font-size:11px;">
+                                        <i class="fa-solid fa-language me-1 text-info"></i>${p.languages || 'Hindi, Regional'}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>`;
+                    container.appendChild(col);
+                });
+            }
+        } catch(e) {
+            container.innerHTML = `
+                <div class="col-12">
+                    <div class="alert alert-warning border-0 rounded-3">
+                        <i class="fa-solid fa-triangle-exclamation me-2"></i>
+                        Could not load porter list.
+                        <a href="#" onclick="loadPortersForSelectedStation()" class="ms-2 fw-bold">Retry</a>
+                    </div>
+                </div>`;
+        }
+    }
+
+    function selectPorter(porterId, el) {
+        document.querySelectorAll('.porter-card-selectable, .auto-dispatch-card').forEach(c => c.classList.remove('selected'));
+        el.classList.add('selected');
+        document.getElementById('selectedPorterId').value = porterId;
+    }
+
+    // Event Listeners
+    document.getElementById('stationSelect').addEventListener('change', onStationChange);
+    document.getElementById('luggageCategory').addEventListener('change', updateCategoryHint);
+    document.getElementById('weightKg').addEventListener('input', calculateFare);
+    document.getElementById('bagCount').addEventListener('input', calculateFare);
+    document.getElementById('isFragile').addEventListener('change', calculateFare);
+
+    // Form Submit
+    document.getElementById('bookingForm').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const btn = document.getElementById('confirmBtn');
+        btn.disabled = true;
+        btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin me-2"></i>Dispatching Porter...';
+
+        const pickupSel = document.getElementById('pickupSelect');
+        const dropSel = document.getElementById('dropSelect');
+        const pickupText = pickupSel.options[pickupSel.selectedIndex]?.text?.replace(/^[📍\s]+/, '') || 'Main Entrance Gate';
+        const dropText = dropSel.options[dropSel.selectedIndex]?.text?.replace(/^[📍\s]+/, '') || 'Platform 1';
+
+        const rawUser = localStorage.getItem('sp_user');
+        let passName = 'Passenger';
+        let passPhone = '9811002233';
+        if (rawUser) {
+            try {
+                const u = JSON.parse(rawUser);
+                if (u.data) {
+                    passName = u.data.fullName || passName;
+                    passPhone = u.data.phone || passPhone;
+                }
+            } catch(e) {}
+        }
+
+        const payload = {
+            passengerId: currentPassengerId,
+            passengerName: passName,
+            passengerPhone: passPhone,
+            stationId: parseInt(document.getElementById('stationSelect').value),
+            pickupLocationId: parseInt(pickupSel.value) || 1,
+            pickupLocationName: pickupText,
+            dropLocationId: parseInt(dropSel.value) || 2,
+            dropLocationName: dropText,
+            trainNumber: document.getElementById('trainNo').value.trim(),
+            trainName: 'Express',
+            coachNumber: document.getElementById('coachNo').value.trim(),
+            seatNumber: document.getElementById('seatNo').value.trim(),
+            category: document.getElementById('luggageCategory').value,
+            bagCount: parseInt(document.getElementById('bagCount').value),
+            weightKg: parseFloat(document.getElementById('weightKg').value),
+            isFragile: document.getElementById('isFragile').checked,
+            specialInstructions: document.getElementById('specialNotes').value.trim(),
+            porterId: parseInt(document.getElementById('selectedPorterId').value) || 0
+        };
+
+        try {
+            const res = await API.createBooking(payload);
+            const bk = res.data;
+            showNotification(`✅ Assistance requested: ${bk.bookingCode}! Broadcasted to coolies...`, 'success');
+            setTimeout(() => {
+                window.location.href = `tracking.html?id=${bk.bookingId}`;
+            }, 800);
+        } catch (err) {
+            showNotification(err.message || 'Booking failed. Please try again.', 'danger');
+            btn.disabled = false;
+            btn.innerHTML = '<i class="fa-solid fa-bolt me-2"></i> Confirm Porter Booking';
+        }
+    });
+
+    initPage();
+</script>
+</body>
+</html>

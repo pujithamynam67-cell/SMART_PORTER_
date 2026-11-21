@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Booking History - Smart Porter</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <link href="../assets/css/style.css" rel="stylesheet">
+</head>
+<body class="bg-light">
+    <nav class="navbar navbar-expand-lg sp-navbar sticky-top">
+        <div class="container">
+            <a class="navbar-brand sp-brand" href="../index.html">
+                <i class="fa-solid fa-cart-flatbed-suitcase text-warning"></i>
+                Smart<span>Porter</span>
+            </a>
+            <div class="ms-auto d-flex align-items-center gap-2">
+                <a href="dashboard.html" class="btn btn-outline-light btn-sm"><i class="fa-solid fa-arrow-left me-1"></i> Dashboard</a>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container py-4">
+        <div class="card p-4 border-0 shadow-sm rounded-4">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <h4 class="fw-bold text-navy mb-0"><i class="fa-solid fa-clock-rotate-left text-warning me-2"></i> All Past Luggage Bookings</h4>
+                <a href="book.html" class="btn btn-sp-orange btn-sm"><i class="fa-solid fa-plus-circle me-1"></i> New Booking</a>
+            </div>
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0">
+                    <thead class="table-light small text-uppercase">
+                        <tr>
+                            <th>Code</th>
+                            <th>Station</th>
+                            <th>Assigned Coolie</th>
+                            <th>Pickup ➔ Drop</th>
+                            <th>Luggage</th>
+                            <th>Fare</th>
+                            <th>Status</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody id="historyBody">
+                        <tr><td colspan="8" class="text-center py-4 text-muted"><i class="fa-solid fa-spinner fa-spin me-2"></i>Loading bookings...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+    <script src="../assets/js/api.js"></script>
+    <script>
+        async function loadHistory() {
+            let pid = 1;
+            const raw = localStorage.getItem('sp_user');
+            if (raw) {
+                try { pid = JSON.parse(raw).data.passengerId || 1; } catch(e) {}
+            }
+            try {
+                const res = await API.getPassengerHistory(pid);
+                const tbody = document.getElementById('historyBody');
+                tbody.innerHTML = '';
+                const list = res.data || [];
+                if (list.length > 0) {
+                    list.forEach(b => {
+                        const tr = document.createElement('tr');
+                        tr.innerHTML = `
+                            <td><strong>${b.bookingCode}</strong></td>
+                            <td>${b.stationCode || 'NDLS'} - ${b.stationName || 'Station'}</td>
+                            <td>
+                                <span class="badge bg-dark-subtle text-dark border me-1">${b.porterBadge || 'CK-101'}</span>
+                                <span class="small fw-semibold">${b.porterName || 'Ramesh Kumar'}</span>
+                            </td>
+                            <td><small>${b.pickupLocationName || '-'} ➔ ${b.dropLocationName || '-'}</small></td>
+                            <td><small>${b.luggage ? `${b.luggage.bagCount || 1} bags (${b.luggage.weightKg || 15} kg)` : '-'}</small></td>
+                            <td><strong>₹${Number(b.totalAmount || 0).toFixed(2)}</strong></td>
+                            <td><span class="badge ${b.bookingStatus === 'COMPLETED' ? 'bg-success' : 'bg-warning text-dark'}">${b.bookingStatus}</span></td>
+                            <td>
+                                <a href="tracking.html?id=${b.bookingId}" class="btn btn-sm btn-outline-primary py-0 me-1">Track</a>
+                                <a href="receipt.html?id=${b.bookingId}" class="btn btn-sm btn-outline-secondary py-0">Receipt</a>
+                            </td>
+                        `;
+                        tbody.appendChild(tr);
+                    });
+                } else {
+                    tbody.innerHTML = '<tr><td colspan="8" class="text-center py-4 text-muted">No bookings found. <a href="book.html">Book now!</a></td></tr>';
+                }
+            } catch(e) {
+                document.getElementById('historyBody').innerHTML = '<tr><td colspan="8" class="text-center py-4 text-muted">No bookings found.</td></tr>';
+            }
+        }
+        loadHistory();
+    </script>
+</body>
+</html>

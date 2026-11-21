@@ -1,0 +1,836 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Smart Porter - Smart Luggage Management System</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+
+    <!-- Top Sticky Navigation Bar -->
+    <nav class="navbar">
+        <div class="nav-brand" onclick="switchView('passenger')">
+            <div class="brand-icon">
+                <i class="fa-solid fa-luggage-cart"></i>
+            </div>
+            <div class="brand-text">
+                <h1>SmartPorter <span class="badge-tag">IRCTC Pilot</span></h1>
+                <p>Smart Luggage Mobility for Indian Railways</p>
+            </div>
+        </div>
+
+        <!-- Role Switching Tabs -->
+        <div class="role-tabs">
+            <button class="role-tab-btn active" id="tab-btn-passenger" onclick="switchView('passenger')">
+                <i class="fa-solid fa-user"></i> Passenger
+            </button>
+            <button class="role-tab-btn" id="tab-btn-porter" onclick="switchView('porter')">
+                <i class="fa-solid fa-person-walking-luggage"></i> Porter (Coolie)
+            </button>
+            <button class="role-tab-btn" id="tab-btn-admin" onclick="switchView('admin')">
+                <i class="fa-solid fa-chart-line"></i> Admin & DBMS Demo
+            </button>
+        </div>
+
+        <!-- User Authentication & Profile Pill -->
+        <div class="nav-user-actions">
+            <div id="user-logged-in-pill" class="user-profile-pill" style="display: none;">
+                <div class="user-avatar" id="nav-user-avatar">P</div>
+                <div>
+                    <strong id="nav-user-name">User</strong>
+                    <span id="nav-user-role" class="badge-tag" style="margin-left: 5px;">PASSENGER</span>
+                </div>
+                <button class="btn btn-outline btn-sm" onclick="logoutUser()" title="Logout" style="margin-left: 8px;">
+                    <i class="fa-solid fa-right-from-bracket"></i>
+                </button>
+            </div>
+
+            <div id="user-guest-actions">
+                <button class="btn btn-primary btn-sm" onclick="openAuthModal('passenger')">
+                    <i class="fa-solid fa-arrow-right-to-bracket"></i> Sign In / Register
+                </button>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Container -->
+    <main class="main-content">
+
+        <!-- ========================================================= -->
+        <!-- VIEW 1: PASSENGER DASHBOARD (RAPIDO / UBER BOOKING STYLE) -->
+        <!-- ========================================================= -->
+        <section id="view-passenger" class="view-section active">
+            <div class="booking-grid">
+                
+                <!-- Left Column: Booking Form -->
+                <div class="booking-form-col">
+                    <div class="card">
+                        <div class="card-header">
+                            <h2 class="card-title">
+                                <i class="fa-solid fa-ticket" style="color: var(--primary);"></i> Book Luggage Porter (Sahayak)
+                            </h2>
+                            <span class="badge-tag" style="background: rgba(16, 185, 129, 0.2); color: var(--success);">Licensed Porters Only</span>
+                        </div>
+
+                        <form id="porter-booking-form" onsubmit="handleCreateBooking(event)">
+                            <!-- Station Picker -->
+                            <div class="form-group">
+                                <label class="form-label"><i class="fa-solid fa-train"></i> Select Railway Station</label>
+                                <select id="book-station-select" class="form-select" onchange="calculateFareEstimate()" required>
+                                    <option value="" disabled selected>Loading stations...</option>
+                                </select>
+                            </div>
+
+                            <!-- Train & Coach Details -->
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label class="form-label"><i class="fa-solid fa-hashtag"></i> Train Number / Name</label>
+                                    <input type="text" id="book-train" class="form-control" placeholder="e.g. 12004 Shatabdi Exp" required>
+                                </div>
+                                <div class="form-group">
+                                    <label class="form-label"><i class="fa-solid fa-door-open"></i> Coach & Seat</label>
+                                    <input type="text" id="book-coach" class="form-control" placeholder="e.g. B4 - 32" required>
+                                </div>
+                            </div>
+
+                            <!-- Pickup & Drop Locations -->
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label class="form-label"><i class="fa-solid fa-location-dot" style="color: var(--primary);"></i> Pickup Point</label>
+                                    <select id="book-pickup" class="form-select" required>
+                                        <option value="Main Entrance Gate 1 (Paharganj / Front)">Main Entrance Gate 1</option>
+                                        <option value="Auto / Taxi Stand Parking Gate">Auto / Taxi Stand Parking</option>
+                                        <option value="Metro Station Connector / Skywalk">Metro Station Skywalk</option>
+                                        <option value="Foot Over Bridge (North Concourse)">Foot Over Bridge (North)</option>
+                                        <option value="Waiting Room / Concourse Hall">Waiting Room / Concourse</option>
+                                    </select>
+                                </div>
+                                <div class="form-group">
+                                    <label class="form-label"><i class="fa-solid fa-flag-checkered" style="color: var(--success);"></i> Drop Destination</label>
+                                    <select id="book-drop" class="form-select" required>
+                                        <option value="Platform 1 - Coach Position">Platform 1 - Coach Position</option>
+                                        <option value="Platform 2/3 - Coach Position">Platform 2/3 - Coach Position</option>
+                                        <option value="Platform 4/5 - Coach Position">Platform 4/5 - Coach Position</option>
+                                        <option value="Platform 6/7 - Coach Position">Platform 6/7 - Coach Position</option>
+                                        <option value="Exit Gate to Cab Pick-up Area">Exit Gate to Cab Pick-up Area</option>
+                                    </select>
+                                </div>
+                            </div>
+
+                            <!-- Luggage Type Selector -->
+                            <div class="form-group">
+                                <label class="form-label"><i class="fa-solid fa-suitcase-rolling"></i> Luggage Category</label>
+                                <div class="luggage-types-selector">
+                                    <div class="luggage-option selected" onclick="selectLuggageType('Trolley Bag', this)">
+                                        <div class="luggage-icon">🧳</div>
+                                        <div class="luggage-name">Trolley Bag</div>
+                                    </div>
+                                    <div class="luggage-option" onclick="selectLuggageType('Heavy Suitcase', this)">
+                                        <div class="luggage-icon">📦</div>
+                                        <div class="luggage-name">Heavy Suitcase</div>
+                                    </div>
+                                    <div class="luggage-option" onclick="selectLuggageType('Duffle Bag', this)">
+                                        <div class="luggage-icon">🎒</div>
+                                        <div class="luggage-name">Duffle Bag</div>
+                                    </div>
+                                    <div class="luggage-option" onclick="selectLuggageType('Box/Carton', this)">
+                                        <div class="luggage-icon">📦</div>
+                                        <div class="luggage-name">Box / Carton</div>
+                                    </div>
+                                    <div class="luggage-option" onclick="selectLuggageType('Backpack', this)">
+                                        <div class="luggage-icon">🎒</div>
+                                        <div class="luggage-name">Backpack</div>
+                                    </div>
+                                </div>
+                                <input type="hidden" id="book-luggage-type" value="Trolley Bag">
+                            </div>
+
+                            <!-- Bag Quantity & Total Weight -->
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label class="form-label">Number of Bags</label>
+                                    <div class="counter-box">
+                                        <button type="button" class="counter-btn" onclick="adjustCount(-1)">-</button>
+                                        <span id="bag-count-display" class="counter-val">1</span>
+                                        <button type="button" class="counter-btn" onclick="adjustCount(1)">+</button>
+                                    </div>
+                                    <input type="hidden" id="book-quantity" value="1">
+                                </div>
+
+                                <div class="form-group">
+                                    <label class="form-label">Total Estimated Weight (KG)</label>
+                                    <div style="display: flex; gap: 0.5rem; align-items: center;">
+                                        <input type="range" id="weight-slider" min="5" max="150" value="25" step="5" class="form-control" style="flex: 1;" oninput="syncWeight(this.value)">
+                                        <input type="number" id="book-weight" min="1" max="200" value="25" class="form-control" style="width: 80px;" oninput="syncWeight(this.value)" required>
+                                        <span style="font-weight: 700; color: var(--text-secondary);">KG</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Options: Fragile & Senior Citizen Concession -->
+                            <div class="form-row" style="margin-bottom: 1.25rem;">
+                                <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer; font-size: 0.85rem;">
+                                    <input type="checkbox" id="book-fragile" onchange="calculateFareEstimate()"> 
+                                    <span><i class="fa-solid fa-wine-glass" style="color: #f43f5e;"></i> Fragile items (Extra handling care)</span>
+                                </label>
+                                <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer; font-size: 0.85rem;">
+                                    <input type="checkbox" id="book-senior" onchange="calculateFareEstimate()"> 
+                                    <span><i class="fa-solid fa-person-cane" style="color: var(--accent);"></i> Senior Citizen (15% Subsidy)</span>
+                                </label>
+                            </div>
+
+                            <!-- Dynamic Fare Breakdown Card -->
+                            <div class="fare-estimate-box">
+                                <div class="fare-row">
+                                    <span>Station Base Coolie Fare:</span>
+                                    <span id="fare-base">₹120.00</span>
+                                </div>
+                                <div class="fare-row">
+                                    <span>Luggage Weight Charge:</span>
+                                    <span id="fare-weight">₹125.00</span>
+                                </div>
+                                <div class="fare-row">
+                                    <span>Baggage Handling Fee:</span>
+                                    <span id="fare-handling">₹20.00</span>
+                                </div>
+                                <div class="fare-row" id="row-fragile" style="display: none;">
+                                    <span>Fragile Care Surcharge:</span>
+                                    <span id="fare-fragile">₹30.00</span>
+                                </div>
+                                <div class="fare-row" id="row-senior" style="display: none; color: var(--success);">
+                                    <span>Senior Citizen 15% Subsidy:</span>
+                                    <span id="fare-discount">-₹0.00</span>
+                                </div>
+                                <div class="fare-row total">
+                                    <span>Total Guaranteed Fare:</span>
+                                    <span id="fare-total">₹265.00</span>
+                                </div>
+                            </div>
+
+                            <!-- Submit Button -->
+                            <button type="submit" class="btn btn-primary btn-lg" id="btn-request-porter">
+                                <i class="fa-solid fa-bolt"></i> Request Smart Porter Now
+                            </button>
+                        </form>
+                    </div>
+                </div>
+
+                <!-- Right Column: Live Station Tracking & Active Journey -->
+                <div class="booking-track-col">
+                    
+                    <!-- Live Ride Card (Rapido/Uber Simulation) -->
+                    <div class="card" id="active-trip-card" style="display: none;">
+                        <div class="card-header">
+                            <h3 class="card-title">
+                                <i class="fa-solid fa-route" style="color: var(--accent);"></i> Live Porter Journey
+                            </h3>
+                            <span id="active-trip-status-pill" class="status-pill status-REQUESTED">REQUESTED</span>
+                        </div>
+
+                        <!-- Progress Bar Tracker -->
+                        <div class="status-tracker">
+                            <div class="status-step active" id="step-requested">
+                                <div class="step-bubble">1</div>
+                                <div class="step-label">Requested</div>
+                            </div>
+                            <div class="status-step" id="step-accepted">
+                                <div class="step-bubble">2</div>
+                                <div class="step-label">Assigned</div>
+                            </div>
+                            <div class="status-step" id="step-picked">
+                                <div class="step-bubble">3</div>
+                                <div class="step-label">Luggage Picked</div>
+                            </div>
+                            <div class="status-step" id="step-completed">
+                                <div class="step-bubble">4</div>
+                                <div class="step-label">Completed</div>
+                            </div>
+                        </div>
+
+                        <!-- Porter Assignment Details Card -->
+                        <div id="assigned-porter-box" class="porter-card">
+                            <div class="porter-info">
+                                <div class="porter-badge-icon">
+                                    <span id="active-porter-badge">CK-101</span>
+                                    <span>COOLIE</span>
+                                </div>
+                                <div>
+                                    <h4 id="active-porter-name" style="font-size: 1rem;">Ramesh Kumar</h4>
+                                    <div style="font-size: 0.8rem; color: var(--text-secondary);">
+                                        <i class="fa-solid fa-star" style="color: var(--primary);"></i> <span id="active-porter-rating">4.9</span> • 
+                                        <span id="active-porter-phone">9876543210</span>
+                                    </div>
+                                    <div style="font-size: 0.75rem; color: var(--accent); margin-top: 3px;">
+                                        <i class="fa-solid fa-circle-check"></i> IRCTC Verified Sahayak
+                                    </div>
+                                </div>
+                            </div>
+                            <button class="btn btn-outline btn-sm" onclick="alert('Calling assigned porter...')">
+                                <i class="fa-solid fa-phone"></i> Call
+                            </button>
+                        </div>
+
+                        <!-- Trip Metadata -->
+                        <div style="background: var(--bg-card-alt); border-radius: var(--radius-sm); padding: 0.85rem; margin-bottom: 1rem; font-size: 0.85rem;">
+                            <div style="display: flex; justify-content: space-between; margin-bottom: 4px;">
+                                <span style="color: var(--text-secondary);">Booking Code:</span>
+                                <strong id="active-booking-code" style="color: var(--primary);">SP-2026-0000</strong>
+                            </div>
+                            <div style="display: flex; justify-content: space-between; margin-bottom: 4px;">
+                                <span style="color: var(--text-secondary);">Pickup:</span>
+                                <span id="active-pickup-display">Main Gate 1</span>
+                            </div>
+                            <div style="display: flex; justify-content: space-between; margin-bottom: 4px;">
+                                <span style="color: var(--text-secondary);">Drop:</span>
+                                <span id="active-drop-display">Platform 1 - Coach B4</span>
+                            </div>
+                            <div style="display: flex; justify-content: space-between;">
+                                <span style="color: var(--text-secondary);">Luggage:</span>
+                                <span id="active-luggage-display">1 Trolley Bag (25 kg)</span>
+                            </div>
+                        </div>
+
+                        <!-- Action Buttons for Passenger -->
+                        <div id="passenger-trip-actions" style="display: flex; gap: 0.75rem;">
+                            <button id="btn-passenger-pay" class="btn btn-success btn-lg" onclick="openPaymentModal()" style="display: none;">
+                                <i class="fa-solid fa-credit-card"></i> Pay & Complete Trip (<span id="pay-amount-display">₹265</span>)
+                            </button>
+                            <button id="btn-passenger-feedback" class="btn btn-primary btn-lg" onclick="openFeedbackModal()" style="display: none;">
+                                <i class="fa-solid fa-star"></i> Rate Your Porter
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Station Live Map Radar Simulation -->
+                    <div class="station-map-card">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem; position: relative; z-index: 5;">
+                            <span style="font-size: 0.85rem; font-weight: 700; color: var(--accent);">
+                                <i class="fa-solid fa-satellite-dish"></i> Live Station Platform Radar
+                            </span>
+                            <span class="badge-tag" id="radar-station-name">NDLS (Platform 1-16)</span>
+                        </div>
+
+                        <div class="map-radar"></div>
+
+                        <!-- Simulated Platform Track Lines & Porters -->
+                        <div style="position: relative; z-index: 3; margin-top: 2rem;">
+                            <div style="font-size: 0.75rem; color: var(--text-muted); display: flex; justify-content: space-between;">
+                                <span>Platform 1 (Main Concourse)</span>
+                                <span>Platform 8</span>
+                                <span>Platform 16 (Ajmeri Gate)</span>
+                            </div>
+                            <div class="station-track-line"></div>
+                            
+                            <!-- Animated Porter Pins -->
+                            <div class="porter-pin" style="top: -22px; left: 15%;">
+                                <i class="fa-solid fa-person-walking-luggage"></i> Ramesh (CK-101)
+                            </div>
+                            <div class="porter-pin" style="top: 25px; left: 55%; background: var(--accent);">
+                                <i class="fa-solid fa-person-walking-luggage"></i> Suresh (CK-102)
+                            </div>
+                        </div>
+
+                        <div style="position: relative; z-index: 5; margin-top: 4.5rem; font-size: 0.78rem; color: var(--text-secondary); text-align: center;">
+                            <i class="fa-solid fa-circle" style="color: var(--success); font-size: 0.6rem;"></i> Connected to Railway IoT Station Hub. Automatic Porter Dispatch Active.
+                        </div>
+                    </div>
+
+                    <!-- Past Rides History -->
+                    <div class="card" style="margin-top: 1.5rem;">
+                        <div class="card-header">
+                            <h3 class="card-title"><i class="fa-solid fa-clock-rotate-left"></i> My Recent Luggage Trips</h3>
+                        </div>
+                        <div class="table-responsive">
+                            <table class="table" id="passenger-history-table">
+                                <thead>
+                                    <tr>
+                                        <th>Code</th>
+                                        <th>Station</th>
+                                        <th>Porter</th>
+                                        <th>Fare</th>
+                                        <th>Status</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <td colspan="5" style="text-align: center; color: var(--text-muted);">Sign in to view your bookings</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+        </section>
+
+        <!-- ========================================================= -->
+        <!-- VIEW 2: PORTER (COOLIE) DUTY CONSOLE                       -->
+        <!-- ========================================================= -->
+        <section id="view-porter" class="view-section">
+            <div class="booking-grid">
+                
+                <!-- Left: Porter Status & Active Job Operations -->
+                <div class="booking-form-col">
+                    <div class="card">
+                        <div class="card-header">
+                            <h2 class="card-title">
+                                <i class="fa-solid fa-id-card-clip" style="color: var(--primary);"></i> Porter Duty Dashboard
+                            </h2>
+                            <div style="display: flex; align-items: center; gap: 0.75rem;">
+                                <span style="font-size: 0.85rem; color: var(--text-secondary);">Availability:</span>
+                                <button id="btn-porter-toggle-duty" class="btn btn-success btn-sm" onclick="togglePorterDuty()">
+                                    <i class="fa-solid fa-circle"></i> ONLINE (Available)
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Porter Identity Card -->
+                        <div class="porter-card" style="margin-bottom: 1.5rem;">
+                            <div class="porter-info">
+                                <div class="porter-badge-icon" style="width: 54px; height: 54px; font-size: 0.9rem;">
+                                    <span id="porter-profile-badge">CK-101</span>
+                                    <span>LICENSED</span>
+                                </div>
+                                <div>
+                                    <h3 id="porter-profile-name" style="font-size: 1.15rem;">Ramesh Kumar</h3>
+                                    <div style="font-size: 0.85rem; color: var(--text-secondary);">
+                                        <i class="fa-solid fa-train"></i> Station: <strong id="porter-profile-station">NDLS (New Delhi)</strong> • 
+                                        <i class="fa-solid fa-star" style="color: var(--primary);"></i> <strong id="porter-profile-rating">4.90</strong>
+                                    </div>
+                                    <div style="font-size: 0.8rem; color: var(--text-muted); margin-top: 2px;">
+                                        Total Trips Completed: <span id="porter-profile-trips">142</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Active Job Operating Box -->
+                        <div id="porter-active-job-box" style="display: none; background: var(--bg-card-alt); border: 1.5px solid var(--accent); border-radius: var(--radius-md); padding: 1.25rem; margin-bottom: 1.5rem;">
+                            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.75rem;">
+                                <span class="badge-tag" style="background: var(--accent); color: #000;">ACTIVE TRIP IN PROGRESS</span>
+                                <strong id="porter-job-code" style="color: var(--primary);">SP-2026-XXXX</strong>
+                            </div>
+
+                            <div style="font-size: 0.9rem; margin-bottom: 1rem; line-height: 1.7;">
+                                <div><strong style="color: var(--text-secondary);">Passenger:</strong> <span id="porter-job-passenger">Rajesh Sharma</span> (<span id="porter-job-phone">9811002233</span>)</div>
+                                <div><strong style="color: var(--text-secondary);">Train / Coach:</strong> <span id="porter-job-train">12004 Shatabdi / Coach B4</span></div>
+                                <div><strong style="color: var(--text-secondary);">Pickup:</strong> <span id="porter-job-pickup">Main Gate 1</span></div>
+                                <div><strong style="color: var(--text-secondary);">Drop:</strong> <span id="porter-job-drop">Platform 1 - Coach B4</span></div>
+                                <div><strong style="color: var(--text-secondary);">Luggage:</strong> <span id="porter-job-luggage">2 Trolley Bags (35 KG)</span></div>
+                                <div><strong style="color: var(--text-secondary);">Total Fare:</strong> <strong id="porter-job-fare" style="color: var(--primary); font-size: 1.1rem;">₹295.00</strong></div>
+                            </div>
+
+                            <!-- Porter Trip Progression Controls -->
+                            <div style="display: flex; flex-direction: column; gap: 0.6rem;">
+                                <button class="btn btn-primary" id="btn-porter-step-picked" onclick="advancePorterJobStatus('PICKED_UP')">
+                                    <i class="fa-solid fa-hand-holding-hand"></i> Mark Luggage Picked Up
+                                </button>
+                                <button class="btn btn-accent" id="btn-porter-step-transit" onclick="advancePorterJobStatus('IN_TRANSIT')" style="display: none;">
+                                    <i class="fa-solid fa-person-walking-luggage"></i> In Transit to Coach / Drop Point
+                                </button>
+                                <button class="btn btn-success" id="btn-porter-step-complete" onclick="advancePorterJobStatus('COMPLETED')" style="display: none;">
+                                    <i class="fa-solid fa-circle-check"></i> Complete Luggage Service & Collect Fare
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- No Active Job Placeholder -->
+                        <div id="porter-no-job-placeholder" style="text-align: center; padding: 2.5rem 1rem; border: 1px dashed var(--border); border-radius: var(--radius-sm); color: var(--text-muted);">
+                            <i class="fa-solid fa-bell" style="font-size: 2.5rem; margin-bottom: 0.75rem; color: var(--primary);"></i>
+                            <h4>Listening for Incoming Passenger Requests...</h4>
+                            <p style="font-size: 0.85rem; margin-top: 0.25rem;">Stay online to receive instant luggage transport assignments at your station.</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Right: Porter Earnings & Historical Job Log -->
+                <div class="booking-track-col">
+                    <div class="stats-grid" style="grid-template-columns: 1fr 1fr; margin-bottom: 1.5rem;">
+                        <div class="stat-card">
+                            <div class="stat-label">Net Lifetime Earnings</div>
+                            <div class="stat-value" id="porter-stat-earnings" style="color: var(--success);">₹28,400</div>
+                            <div class="stat-sub">90% Porter Share via IRCTC Direct Pay</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-label">Completed Jobs</div>
+                            <div class="stat-value" id="porter-stat-trips">142</div>
+                            <div class="stat-sub">100% On-Time Record</div>
+                        </div>
+                    </div>
+
+                    <div class="card">
+                        <div class="card-header">
+                            <h3 class="card-title"><i class="fa-solid fa-clipboard-list"></i> My Assigned Luggage Bookings</h3>
+                        </div>
+                        <div class="table-responsive">
+                            <table class="table" id="porter-jobs-table">
+                                <thead>
+                                    <tr>
+                                        <th>Code</th>
+                                        <th>Passenger</th>
+                                        <th>Luggage</th>
+                                        <th>Fare</th>
+                                        <th>Status</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <td colspan="5" style="text-align: center; color: var(--text-muted);">Sign in to view your jobs</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </section>
+
+        <!-- ========================================================= -->
+        <!-- VIEW 3: ADMIN DASHBOARD & DBMS CONCEPT DEMONSTRATION      -->
+        <!-- ========================================================= -->
+        <section id="view-admin" class="view-section">
+            
+            <!-- KPI Metrics -->
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-label">Total Bookings</div>
+                    <div class="stat-value" id="admin-stat-bookings">0</div>
+                    <div class="stat-sub">Across All Railway Stations</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">Active Luggage Rides</div>
+                    <div class="stat-value" id="admin-stat-active" style="color: var(--accent);">0</div>
+                    <div class="stat-sub">Requested, Assigned or In Transit</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">Registered Porters</div>
+                    <div class="stat-value" id="admin-stat-porters">0</div>
+                    <div class="stat-sub"><span id="admin-stat-avail-porters">0</span> Online Available</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">Gross Platform Revenue</div>
+                    <div class="stat-value" id="admin-stat-revenue" style="color: var(--success);">₹0.00</div>
+                    <div class="stat-sub">Includes 10% Station Service Fee</div>
+                </div>
+            </div>
+
+            <!-- DBMS Concepts Interactive Showcase Playground -->
+            <div class="card" style="border: 2px solid var(--primary);">
+                <div class="card-header">
+                    <div>
+                        <h2 class="card-title" style="color: var(--primary);">
+                            <i class="fa-solid fa-database"></i> Live DBMS Concepts Evaluation Playground
+                        </h2>
+                        <p style="font-size: 0.8rem; color: var(--text-secondary); margin-top: 3px;">
+                            Click any concept below to execute real-time SQL queries (Joins, Subqueries, Views, Triggers, Aggregates) directly on the MySQL database.
+                        </p>
+                    </div>
+                </div>
+
+                <!-- Concept Tabs -->
+                <div style="display: flex; gap: 0.5rem; flex-wrap: wrap; margin-bottom: 1rem;">
+                    <button class="btn btn-outline btn-sm" onclick="runDbmsDemo('JOINS')">
+                        <i class="fa-solid fa-link"></i> 1. Multi-Table Joins
+                    </button>
+                    <button class="btn btn-outline btn-sm" onclick="runDbmsDemo('SUBQUERIES')">
+                        <i class="fa-solid fa-filter"></i> 2. Subqueries & Comparison
+                    </button>
+                    <button class="btn btn-outline btn-sm" onclick="runDbmsDemo('AGGREGATES')">
+                        <i class="fa-solid fa-calculator"></i> 3. Aggregates & GROUP BY
+                    </button>
+                    <button class="btn btn-outline btn-sm" onclick="runDbmsDemo('VIEWS')">
+                        <i class="fa-solid fa-eye"></i> 4. Database Views (vw_*)
+                    </button>
+                    <button class="btn btn-outline btn-sm" onclick="runDbmsDemo('TRIGGERS')">
+                        <i class="fa-solid fa-bolt"></i> 5. Audit Log via Triggers
+                    </button>
+                </div>
+
+                <!-- DBMS SQL Display Console -->
+                <div class="dbms-console-box">
+                    <div style="color: var(--text-secondary); font-size: 0.8rem; margin-bottom: 5px;">
+                        <i class="fa-solid fa-terminal"></i> <strong id="dbms-query-title">Multi-Table INNER JOIN (Bookings + Passengers + Porters + Stations + Luggage + Payments)</strong>
+                    </div>
+                    <code id="dbms-sql-code" style="display: block; white-space: pre-wrap; color: #38bdf8;">SELECT ...</code>
+                </div>
+
+                <!-- Query Result Table -->
+                <div class="table-responsive" style="margin-top: 1rem; max-height: 350px;">
+                    <table class="table" id="dbms-results-table">
+                        <thead id="dbms-results-thead">
+                            <tr><th>Run a query above to see live MySQL database results</th></tr>
+                        </thead>
+                        <tbody id="dbms-results-tbody">
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Station Analytics (View: vw_station_analytics) -->
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="card-title">
+                        <i class="fa-solid fa-chart-column"></i> Railway Station Analytics (via <code>vw_station_analytics</code>)
+                    </h3>
+                    <button class="btn btn-outline btn-sm" onclick="loadAdminData()">
+                        <i class="fa-solid fa-rotate-right"></i> Refresh
+                    </button>
+                </div>
+                <div class="table-responsive">
+                    <table class="table" id="station-analytics-table">
+                        <thead>
+                            <tr>
+                                <th>Code</th>
+                                <th>Station Name</th>
+                                <th>City</th>
+                                <th>Porters (Online/Total)</th>
+                                <th>Total Trips</th>
+                                <th>Total Luggage (KG)</th>
+                                <th>Gross Revenue</th>
+                                <th>Avg Fare</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <!-- Dynamic Content -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Porter Leaderboard (View: vw_porter_leaderboard) -->
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="card-title">
+                        <i class="fa-solid fa-trophy" style="color: var(--primary);"></i> Porter Performance Leaderboard (via <code>vw_porter_leaderboard</code>)
+                    </h3>
+                </div>
+                <div class="table-responsive">
+                    <table class="table" id="porter-leaderboard-table">
+                        <thead>
+                            <tr>
+                                <th>Badge</th>
+                                <th>Porter Name</th>
+                                <th>Station</th>
+                                <th>Rating</th>
+                                <th>Completed Trips</th>
+                                <th>Total Earnings</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <!-- Dynamic Content -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+        </section>
+
+    </main>
+
+    <!-- ========================================================= -->
+    <!-- MODALS SECTION                                            -->
+    <!-- ========================================================= -->
+
+    <!-- 1. Authentication Modal (Passenger / Porter / Admin Login & Register) -->
+    <div id="auth-modal" class="modal-backdrop">
+        <div class="modal-box">
+            <button class="modal-close" onclick="closeAuthModal()">&times;</button>
+            
+            <div style="display: flex; gap: 0.5rem; border-bottom: 1px solid var(--border); padding-bottom: 1rem; margin-bottom: 1.25rem;">
+                <button class="btn btn-sm btn-outline active" id="auth-tab-pass" onclick="switchAuthTab('passenger')">Passenger</button>
+                <button class="btn btn-sm btn-outline" id="auth-tab-port" onclick="switchAuthTab('porter')">Porter</button>
+                <button class="btn btn-sm btn-outline" id="auth-tab-adm" onclick="switchAuthTab('admin')">Admin</button>
+            </div>
+
+            <!-- Passenger Login / Register Form -->
+            <div id="auth-pane-passenger">
+                <h3 style="margin-bottom: 0.5rem;">Passenger Access</h3>
+                <p style="font-size: 0.8rem; color: var(--text-secondary); margin-bottom: 1.25rem;">
+                    Sign in with your phone or email to manage luggage bookings.
+                </p>
+
+                <form id="passenger-login-form" onsubmit="handlePassengerLogin(event)">
+                    <div class="form-group">
+                        <label class="form-label">Phone or Email</label>
+                        <input type="text" id="pass-login-id" class="form-control" placeholder="e.g. 9811002233 or rajesh@example.com" value="9811002233" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Password</label>
+                        <input type="password" id="pass-login-pwd" class="form-control" value="password123" required>
+                    </div>
+                    <button type="submit" class="btn btn-primary btn-lg" style="margin-top: 0.5rem;">Sign In</button>
+                </form>
+
+                <div style="margin-top: 1.25rem; font-size: 0.85rem; text-align: center;">
+                    Don't have an account? <a href="javascript:void(0)" onclick="togglePassRegister(true)" style="color: var(--primary);">Register New Passenger</a>
+                </div>
+
+                <!-- Registration Subform -->
+                <form id="passenger-register-form" style="display: none; margin-top: 1rem;" onsubmit="handlePassengerRegister(event)">
+                    <h4 style="margin-bottom: 0.75rem; border-top: 1px dashed var(--border); padding-top: 0.75rem;">New Passenger Registration</h4>
+                    <div class="form-group">
+                        <label class="form-label">Full Name</label>
+                        <input type="text" id="pass-reg-name" class="form-control" placeholder="e.g. Amit Verma" required>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label class="form-label">Mobile Number</label>
+                            <input type="tel" id="pass-reg-phone" class="form-control" placeholder="10 digits" required>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Email Address</label>
+                            <input type="email" id="pass-reg-email" class="form-control" placeholder="name@email.com" required>
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label class="form-label">Gender</label>
+                            <select id="pass-reg-gender" class="form-select">
+                                <option value="Male">Male</option>
+                                <option value="Female">Female</option>
+                                <option value="Other">Other</option>
+                            </select>
+                        </div>
+                        <div class="form-group" style="display: flex; align-items: center; padding-top: 1.5rem;">
+                            <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer; font-size: 0.85rem;">
+                                <input type="checkbox" id="pass-reg-senior"> Senior Citizen
+                            </label>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Password</label>
+                        <input type="password" id="pass-reg-pwd" class="form-control" placeholder="Minimum 6 characters" required>
+                    </div>
+                    <button type="submit" class="btn btn-accent btn-lg">Create Passenger Account</button>
+                    <div style="margin-top: 0.5rem; text-align: center;">
+                        <a href="javascript:void(0)" onclick="togglePassRegister(false)" style="font-size: 0.8rem; color: var(--text-secondary);">Back to Login</a>
+                    </div>
+                </form>
+            </div>
+
+            <!-- Porter Login Form -->
+            <div id="auth-pane-porter" style="display: none;">
+                <h3 style="margin-bottom: 0.5rem;">Porter (Coolie) Sign In</h3>
+                <p style="font-size: 0.8rem; color: var(--text-secondary); margin-bottom: 1.25rem;">
+                    Sign in with your Railway Badge Number or registered phone number.
+                </p>
+
+                <form id="porter-login-form" onsubmit="handlePorterLogin(event)">
+                    <div class="form-group">
+                        <label class="form-label">Badge Number or Phone</label>
+                        <input type="text" id="port-login-id" class="form-control" placeholder="e.g. CK-101 or 9876543210" value="CK-101" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Password</label>
+                        <input type="password" id="port-login-pwd" class="form-control" value="password123" required>
+                    </div>
+                    <button type="submit" class="btn btn-primary btn-lg" style="margin-top: 0.5rem;">Sign In to Porter Console</button>
+                </form>
+            </div>
+
+            <!-- Admin Login Form -->
+            <div id="auth-pane-admin" style="display: none;">
+                <h3 style="margin-bottom: 0.5rem;">Station Master & Admin Login</h3>
+                <p style="font-size: 0.8rem; color: var(--text-secondary); margin-bottom: 1.25rem;">
+                    Access system analytics, active porter allocations, and DBMS query demonstrations.
+                </p>
+
+                <form id="admin-login-form" onsubmit="handleAdminLogin(event)">
+                    <div class="form-group">
+                        <label class="form-label">Admin Username</label>
+                        <input type="text" id="admin-login-id" class="form-control" value="admin" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Password</label>
+                        <input type="password" id="admin-login-pwd" class="form-control" value="password123" required>
+                    </div>
+                    <button type="submit" class="btn btn-primary btn-lg" style="margin-top: 0.5rem;">Enter Admin Console</button>
+                </form>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- 2. Payment Modal (Demo UPI / Cash / Card Simulation) -->
+    <div id="payment-modal" class="modal-backdrop">
+        <div class="modal-box">
+            <button class="modal-close" onclick="closePaymentModal()">&times;</button>
+            <h3 style="margin-bottom: 0.5rem;"><i class="fa-solid fa-wallet" style="color: var(--success);"></i> Smart Luggage Fare Payment</h3>
+            <p style="font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 1.25rem;">
+                Amount to Pay: <strong id="modal-pay-amount" style="font-size: 1.3rem; color: var(--primary);">₹265.00</strong>
+            </p>
+
+            <div class="form-group">
+                <label class="form-label">Select Payment Method</label>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem;">
+                    <button type="button" class="btn btn-outline" id="pay-method-upi" onclick="selectPayMethod('UPI')" style="border-color: var(--primary);">
+                        <i class="fa-solid fa-qrcode"></i> UPI (GPay/PhonePe)
+                    </button>
+                    <button type="button" class="btn btn-outline" id="pay-method-cash" onclick="selectPayMethod('CASH')">
+                        <i class="fa-solid fa-money-bill-wave"></i> Cash to Porter
+                    </button>
+                    <button type="button" class="btn btn-outline" id="pay-method-card" onclick="selectPayMethod('CARD')">
+                        <i class="fa-solid fa-credit-card"></i> Debit / Credit Card
+                    </button>
+                    <button type="button" class="btn btn-outline" id="pay-method-wallet" onclick="selectPayMethod('WALLET')">
+                        <i class="fa-solid fa-mobile-screen"></i> IRCTC e-Wallet
+                    </button>
+                </div>
+                <input type="hidden" id="selected-pay-method" value="UPI">
+            </div>
+
+            <div id="upi-qr-box" style="text-align: center; background: #fff; padding: 1rem; border-radius: var(--radius-sm); margin: 1rem 0;">
+                <div style="color: #000; font-weight: 700; margin-bottom: 4px;">Scan & Pay with Any UPI App</div>
+                <div style="font-size: 3rem; color: #1e3a8a;"><i class="fa-solid fa-qrcode"></i></div>
+                <div style="font-size: 0.75rem; color: #475569;">UPI ID: smartporter.rail@upi</div>
+            </div>
+
+            <button class="btn btn-success btn-lg" onclick="executeTripPayment()">
+                <i class="fa-solid fa-lock"></i> Authorize & Complete Payment
+            </button>
+        </div>
+    </div>
+
+    <!-- 3. Feedback and Rating Modal -->
+    <div id="feedback-modal" class="modal-backdrop">
+        <div class="modal-box">
+            <button class="modal-close" onclick="closeFeedbackModal()">&times;</button>
+            <h3 style="margin-bottom: 0.5rem;"><i class="fa-solid fa-star" style="color: var(--primary);"></i> Rate Your Luggage Experience</h3>
+            <p style="font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 1.25rem;">
+                Your feedback automatically triggers recalculation of the porter's rating via MySQL database triggers.
+            </p>
+
+            <div class="form-group" style="text-align: center; margin-bottom: 1.5rem;">
+                <div style="font-size: 2rem; color: var(--border); display: flex; justify-content: center; gap: 0.5rem; cursor: pointer;">
+                    <i class="fa-solid fa-star star-rate" data-val="1" onclick="setRating(1)"></i>
+                    <i class="fa-solid fa-star star-rate" data-val="2" onclick="setRating(2)"></i>
+                    <i class="fa-solid fa-star star-rate" data-val="3" onclick="setRating(3)"></i>
+                    <i class="fa-solid fa-star star-rate" data-val="4" onclick="setRating(4)"></i>
+                    <i class="fa-solid fa-star star-rate" data-val="5" onclick="setRating(5)"></i>
+                </div>
+                <input type="hidden" id="feedback-stars" value="5">
+                <span id="rating-desc" style="font-size: 0.85rem; font-weight: 700; color: var(--primary); margin-top: 5px; display: block;">5 Stars - Excellent Service</span>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">Comments or Compliments (Optional)</label>
+                <textarea id="feedback-comments" class="form-control" rows="3" placeholder="Porter was courteous, carried luggage safely..."></textarea>
+            </div>
+
+            <button class="btn btn-primary btn-lg" onclick="submitPorterFeedback()">
+                <i class="fa-solid fa-paper-plane"></i> Submit Review
+            </button>
+        </div>
+    </div>
+
+    <!-- Toast Notification Container -->
+    <div id="toast-container" class="toast-container"></div>
+
+    <script src="js/app.js"></script>
+</body>
+</html>

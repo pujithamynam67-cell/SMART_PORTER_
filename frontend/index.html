@@ -1,0 +1,632 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Smart Porter - Smart Railway Station Luggage Assistance Platform</title>
+    <!-- Bootstrap 5 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Font Awesome Icons -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <!-- Custom Theme CSS -->
+    <link href="assets/css/style.css" rel="stylesheet">
+</head>
+<body>
+
+    <!-- Professional Navigation Bar -->
+    <nav class="navbar navbar-expand-lg sp-navbar sticky-top">
+        <div class="container">
+            <a class="navbar-brand sp-brand" href="index.html">
+                <i class="fa-solid fa-cart-flatbed-suitcase text-warning"></i>
+                Smart<span>Porter</span>
+            </a>
+            <button class="navbar-toggler text-white" type="button" data-bs-toggle="collapse" data-bs-target="#spNav">
+                <i class="fa-solid fa-bars text-white"></i>
+            </button>
+            <div class="collapse navbar-collapse" id="spNav">
+                <ul class="navbar-nav me-auto mb-2 mb-lg-0 ms-lg-4">
+                    <li class="nav-item"><a class="nav-link sp-nav-link active" href="index.html">Home</a></li>
+                    <li class="nav-item"><a class="nav-link sp-nav-link" href="about.html">About Us</a></li>
+                    <li class="nav-item"><a class="nav-link sp-nav-link" href="services.html">Services</a></li>
+                    <li class="nav-item"><a class="nav-link sp-nav-link" href="contact.html">Contact</a></li>
+                </ul>
+                <div class="d-flex align-items-center gap-2" id="navAuthArea">
+                    <div class="dropdown" id="navSignInDropdown">
+                        <button class="btn btn-sp-navy dropdown-toggle text-white" type="button" data-bs-toggle="dropdown">
+                            <i class="fa-solid fa-user-circle me-1"></i> Sign In
+                        </button>
+                        <ul class="dropdown-menu dropdown-menu-end shadow">
+                            <li><a class="dropdown-item py-2" href="auth/login.html"><i class="fa-solid fa-user me-2 text-primary"></i> Passenger Login</a></li>
+                            <li><a class="dropdown-item py-2" href="auth/porter-login.html"><i class="fa-solid fa-person-walking-luggage me-2 text-danger"></i> Porter (Coolie) Login</a></li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li><a class="dropdown-item py-2" href="auth/admin-login.html"><i class="fa-solid fa-shield-halved me-2 text-dark"></i> Admin Console</a></li>
+                        </ul>
+                    </div>
+                    <a href="passenger/book.html" class="btn btn-sp-orange" onclick="startBookingFlow(event)">
+                        <i class="fa-solid fa-bolt me-1"></i> Book a Porter
+                    </a>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Hero Section -->
+    <section class="hero-section">
+        <div class="container">
+            <div class="row align-items-center gy-5">
+                <div class="col-lg-7">
+                    <span class="hero-badge"><i class="fa-solid fa-train me-1"></i> Indian Railways Digital Mobility</span>
+                    <h1 class="hero-title">
+                        Heavy Luggage at the Station? <br>
+                        <span>Book a Porter in Seconds.</span>
+                    </h1>
+                    <p class="hero-subtitle">
+                        The Rapido & Uber of Indian Railway Stations. Connect with licensed, verified railway coolies (Sahayaks), calculate transparent luggage fares, and track your porter live to your train coach.
+                    </p>
+                    <div class="d-flex flex-wrap gap-3">
+                        <a href="passenger/book.html" class="btn btn-sp-orange btn-lg px-4 py-3" onclick="startBookingFlow(event)">
+                            <i class="fa-solid fa-suitcase-rolling me-2"></i> Book Porter Now
+                        </a>
+                        <a href="auth/porter-register.html" class="btn btn-outline-light btn-lg px-4 py-3">
+                            <i class="fa-solid fa-id-card me-2"></i> Join as Licensed Porter
+                        </a>
+                    </div>
+                    <div class="mt-4 pt-2 d-flex align-items-center gap-4 text-white-50 small">
+                        <div><i class="fa-solid fa-shield-check text-warning me-1"></i> 100% Licensed Coolies</div>
+                        <div><i class="fa-solid fa-tag text-warning me-1"></i> Standard IRCTC Tariff</div>
+                        <div><i class="fa-solid fa-qrcode text-warning me-1"></i> Cashless UPI Support</div>
+                    </div>
+                </div>
+                <div class="col-lg-5 text-center">
+                    <div class="card p-4 border-0 shadow-lg text-dark text-start" style="border-radius: 20px; background: #ffffff;">
+                        <div class="d-flex align-items-center justify-content-between mb-3 pb-2 border-bottom">
+                            <h5 class="fw-bold mb-0 text-navy"><i class="fa-solid fa-calculator text-warning me-2"></i> Instant Fare Estimator</h5>
+                            <span class="badge bg-success-subtle text-success">Live Rates</span>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label small fw-bold text-muted">Select Station</label>
+                            <select id="quick-station" class="form-select" onchange="calcQuick()">
+                                <optgroup label="── North India ──">
+                                <option value="ndls" data-base-mult="1.1">NDLS – New Delhi Railway Station (16 Platforms)</option>
+                                <option value="agc"  data-base-mult="1.0">AGC – Agra Cantt Railway Station</option>
+                                <option value="lko"  data-base-mult="1.0">LKO – Lucknow Charbagh Junction (12 Platforms)</option>
+                                <option value="bsb"  data-base-mult="1.0">BSB – Varanasi Junction (9 Platforms)</option>
+                                <option value="gwl"  data-base-mult="0.95">GWL – Gwalior Junction</option>
+                                <option value="cdg"  data-base-mult="0.95">CDG – Chandigarh Railway Station</option>
+                                <option value="jat"  data-base-mult="0.95">JAT – Jammu Tawi Railway Station</option>
+                                </optgroup>
+                                <optgroup label="── West India ──">
+                                <option value="csmt" data-base-mult="1.15">CSMT – Mumbai Chhatrapati Shivaji Terminus (18 Platforms)</option>
+                                <option value="pune" data-base-mult="1.0">PUNE – Pune Junction</option>
+                                <option value="adi"  data-base-mult="1.0">ADI – Ahmedabad Junction (12 Platforms)</option>
+                                <option value="brc"  data-base-mult="0.95">BRC – Vadodara Junction</option>
+                                <option value="udz"  data-base-mult="0.9">UDZ – Udaipur City Railway Station</option>
+                                <option value="jp"   data-base-mult="0.95">JP – Jaipur Junction</option>
+                                </optgroup>
+                                <optgroup label="── South India ──">
+                                <option value="mas"  data-base-mult="1.0">MAS – MGR Chennai Central (12 Platforms)</option>
+                                <option value="sbc"  data-base-mult="1.0">SBC – KSR Bengaluru City Junction</option>
+                                <option value="hyb"  data-base-mult="1.0">HYB – Hyderabad Deccan Nampally</option>
+                                <option value="sc"   data-base-mult="1.0">SC – Secunderabad Junction</option>
+                                <option value="mys"  data-base-mult="0.9">MYS – Mysuru Junction</option>
+                                <option value="slm"  data-base-mult="0.9">SLM – Salem Junction</option>
+                                <option value="vskp" data-base-mult="0.95">VSKP – Visakhapatnam Railway Station</option>
+                                </optgroup>
+                                <optgroup label="── East India ──">
+                                <option value="hwh"  data-base-mult="1.1">HWH – Howrah Junction Kolkata (23 Platforms)</option>
+                                <option value="ghy"  data-base-mult="0.95">GHY – Guwahati Railway Station</option>
+                                </optgroup>
+                                <optgroup label="── Central India ──">
+                                <option value="bpl"  data-base-mult="0.95">BPL – Bhopal Junction</option>
+                                <option value="ngp"  data-base-mult="0.95">NGP – Nagpur Junction</option>
+                                </optgroup>
+                            </select>
+                        </div>
+                        <div class="row g-2 mb-3">
+                            <div class="col-6">
+                                <label class="form-label small fw-bold text-muted">Luggage Type</label>
+                                <select id="quick-cat" class="form-select" onchange="calcQuick()">
+                                    <option value="Backpack"          data-base="60"  data-rate="2">🎒 Backpack / Light Bag</option>
+                                    <option value="Cabin Bag"         data-base="80"  data-rate="3">💼 Cabin Bag / Small Trolley</option>
+                                    <option value="Standard Bag"      data-base="100" data-rate="4">🧳 Standard Bag</option>
+                                    <option value="Trolley Case"      data-base="120" data-rate="5" selected>🧳 Trolley Case / Medium Suitcase</option>
+                                    <option value="Heavy Suitcase"    data-base="140" data-rate="6">🧳 Heavy Suitcase (25–35 kg)</option>
+                                    <option value="Fragile Carton"    data-base="150" data-rate="5.5">📦 Fragile Carton / Box</option>
+                                    <option value="Electronics Box"   data-base="180" data-rate="7">📺 Electronics Box / Appliance</option>
+                                    <option value="Oversized Parcel"  data-base="200" data-rate="7">📦 Oversized Parcel / Large Carton</option>
+                                    <option value="Medical Equipment" data-base="200" data-rate="6">🏥 Medical Equipment / Wheelchair</option>
+                                    <option value="Bicycle Parts"     data-base="250" data-rate="8">🚲 Bicycle / Two-Wheeler Parts</option>
+                                    <option value="Group Baggage"     data-base="300" data-rate="5">👨‍👩‍👧‍👦 Group Baggage (5+ bags)</option>
+                                </select>
+                            </div>
+                            <div class="col-6">
+                                <label class="form-label small fw-bold text-muted">Approx Weight</label>
+                                <div class="input-group">
+                                    <input type="number" id="quick-weight" class="form-control" value="15" min="1" max="300" oninput="calcQuick()">
+                                    <span class="input-group-text">KG</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="p-3 mb-3 rounded" style="background: #f1f5f9;">
+                            <div class="d-flex justify-content-between small text-muted mb-1">
+                                <span>Base Charge:</span>
+                                <strong class="text-dark" id="quick-est-base">₹120.00</strong>
+                            </div>
+                            <div class="d-flex justify-content-between small text-muted mb-1">
+                                <span>Weight Charge <span id="quick-weight-label">(15 kg × ₹5)</span>:</span>
+                                <strong class="text-dark" id="quick-est-weight">₹75.00</strong>
+                            </div>
+                            <div class="d-flex justify-content-between small text-muted mb-1" id="quick-station-row">
+                                <span>Station Surcharge:</span>
+                                <strong class="text-dark" id="quick-est-stn">₹0.00</strong>
+                            </div>
+                            <hr class="my-2">
+                            <div class="d-flex justify-content-between fw-bold text-navy fs-5">
+                                <span>Total Fare:</span>
+                                <span class="text-warning" id="quick-est-total">₹195.00</span>
+                            </div>
+                        </div>
+                        <a href="passenger/book.html" class="btn btn-sp-orange w-100 py-2" onclick="startBookingFlow(event)">
+                            Proceed to Choose Porter <i class="fa-solid fa-arrow-right ms-1"></i>
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- How It Works Section -->
+    <section class="py-5 bg-white">
+        <div class="container py-4">
+            <div class="text-center mb-5">
+                <span class="badge bg-warning-subtle text-warning fw-bold px-3 py-2 text-uppercase mb-2">Simplicity First</span>
+                <h2 class="fw-bold text-navy">How Smart Porter Works</h2>
+                <p class="text-muted">Book your personal railway luggage assistant in 4 effortless steps.</p>
+            </div>
+            <div class="row g-4">
+                <div class="col-md-3">
+                    <div class="sp-card text-center h-100">
+                        <div class="feature-icon-box mx-auto">
+                            <i class="fa-solid fa-map-location-dot"></i>
+                        </div>
+                        <h5 class="fw-bold">1. Select Station & Points</h5>
+                        <p class="text-muted small">Choose your railway station, entrance pickup gate, and destination train platform or coach.</p>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="sp-card text-center h-100">
+                        <div class="feature-icon-box mx-auto">
+                            <i class="fa-solid fa-suitcase"></i>
+                        </div>
+                        <h5 class="fw-bold">2. Add Luggage Specs</h5>
+                        <p class="text-muted small">Enter bag count, approximate weight, and special care tags. The fare is calculated instantly.</p>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="sp-card text-center h-100">
+                        <div class="feature-icon-box mx-auto">
+                            <i class="fa-solid fa-handshake"></i>
+                        </div>
+                        <h5 class="fw-bold">3. Match With Coolie</h5>
+                        <p class="text-muted small">Licensed porters near your gate accept the booking. Track their live arrival directly to your vehicle.</p>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="sp-card text-center h-100">
+                        <div class="feature-icon-box mx-auto">
+                            <i class="fa-solid fa-circle-check"></i>
+                        </div>
+                        <h5 class="fw-bold">4. Reach Coach & Pay</h5>
+                        <p class="text-muted small">Your bags are safely loaded in your coach. Pay with UPI or cash, and rate your porter's service.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Why Choose Smart Porter -->
+    <section class="py-5" style="background: #f8fafc;">
+        <div class="container py-4">
+            <div class="row align-items-center gy-4">
+                <div class="col-lg-6">
+                    <span class="badge bg-primary-subtle text-primary fw-bold px-3 py-2 text-uppercase mb-2">Platform Benefits</span>
+                    <h2 class="fw-bold text-navy mb-4">Why Indian Railway Passengers Rely On Us</h2>
+                    
+                    <div class="d-flex gap-3 mb-4">
+                        <div class="text-warning fs-3"><i class="fa-solid fa-id-badge"></i></div>
+                        <div>
+                            <h5 class="fw-bold mb-1">100% Railway Licensed Sahayaks</h5>
+                            <p class="text-muted small mb-0">Every porter on our platform wears an official IRCTC metal badge and has verified police clearance.</p>
+                        </div>
+                    </div>
+
+                    <div class="d-flex gap-3 mb-4">
+                        <div class="text-warning fs-3"><i class="fa-solid fa-scale-balanced"></i></div>
+                        <div>
+                            <h5 class="fw-bold mb-1">Zero Haggling, Fixed Digital Tariff</h5>
+                            <p class="text-muted small mb-0">No more aggressive bargaining during train arrival. Transparent per-bag and per-KG rates defined by station masters.</p>
+                        </div>
+                    </div>
+
+                    <div class="d-flex gap-3">
+                        <div class="text-warning fs-3"><i class="fa-solid fa-person-cane"></i></div>
+                        <div>
+                            <h5 class="fw-bold mb-1">Assistance for Elderly & Patients</h5>
+                            <p class="text-muted small mb-0">Priority booking lanes and wheelchair/luggage assistance for senior citizens, mothers with infants, and disabled travelers.</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-lg-6">
+                    <div class="p-4 rounded-4 shadow" style="background: var(--sp-navy); color: #fff;">
+                        <h4 class="fw-bold mb-3"><i class="fa-solid fa-train-subway text-warning me-2"></i> Supported Railway Stations</h4>
+                        <p class="text-white-50 small mb-4">Live porter dispatch active at <strong class="text-warning">25 major Indian railway hubs</strong>:</p>
+                        <div class="row g-2" style="font-size:13px;">
+                            <div class="col-6"><div class="p-2 rounded bg-dark border border-secondary"><strong>NDLS</strong> – New Delhi (16 Pltfs)</div></div>
+                            <div class="col-6"><div class="p-2 rounded bg-dark border border-secondary"><strong>CSMT</strong> – Mumbai (18 Pltfs)</div></div>
+                            <div class="col-6"><div class="p-2 rounded bg-dark border border-secondary"><strong>HWH</strong> – Howrah (23 Pltfs)</div></div>
+                            <div class="col-6"><div class="p-2 rounded bg-dark border border-secondary"><strong>MAS</strong> – Chennai Central (12 Pltfs)</div></div>
+                            <div class="col-6"><div class="p-2 rounded bg-dark border border-secondary"><strong>SBC</strong> – Bengaluru City</div></div>
+                            <div class="col-6"><div class="p-2 rounded bg-dark border border-secondary"><strong>HYB/SC</strong> – Hyderabad</div></div>
+                            <div class="col-6"><div class="p-2 rounded bg-dark border border-secondary"><strong>PUNE</strong> – Pune Junction</div></div>
+                            <div class="col-6"><div class="p-2 rounded bg-dark border border-secondary"><strong>LKO</strong> – Lucknow Charbagh</div></div>
+                            <div class="col-6"><div class="p-2 rounded bg-dark border border-secondary"><strong>AGC</strong> – Agra Cantt</div></div>
+                            <div class="col-6"><div class="p-2 rounded bg-dark border border-secondary"><strong>BSB</strong> – Varanasi Jn</div></div>
+                            <div class="col-6"><div class="p-2 rounded bg-dark border border-secondary"><strong>JP</strong> – Jaipur Junction</div></div>
+                            <div class="col-6"><div class="p-2 rounded bg-dark border border-secondary"><strong>+ 13 more stations</strong> <span class="text-warning">▸</span></div></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Professional Footer -->
+    <footer class="sp-footer">
+        <div class="container">
+            <div class="row g-4">
+                <div class="col-lg-4">
+                    <h4 class="text-white fw-bold mb-3">
+                        <i class="fa-solid fa-cart-flatbed-suitcase text-warning me-2"></i>SmartPorter
+                    </h4>
+                    <p class="small">
+                        A modern digital mobility initiative for Indian Railways passengers and licensed station Sahayaks. Developed as a production-grade full-stack DBMS application.
+                    </p>
+                    <div class="d-flex gap-3 text-white fs-5">
+                        <a href="#"><i class="fa-brands fa-twitter"></i></a>
+                        <a href="#"><i class="fa-brands fa-facebook"></i></a>
+                        <a href="#"><i class="fa-brands fa-linkedin"></i></a>
+                        <a href="#"><i class="fa-brands fa-github"></i></a>
+                    </div>
+                </div>
+                <div class="col-lg-2 col-6">
+                    <h5>Quick Links</h5>
+                    <ul class="list-unstyled small">
+                        <li class="mb-2"><a href="index.html">Home</a></li>
+                        <li class="mb-2"><a href="about.html">About Us</a></li>
+                        <li class="mb-2"><a href="services.html">Services</a></li>
+                        <li class="mb-2"><a href="contact.html">Support</a></li>
+                    </ul>
+                </div>
+                <div class="col-lg-2 col-6">
+                    <h5>Portals</h5>
+                    <ul class="list-unstyled small">
+                        <li class="mb-2"><a href="passenger/dashboard.html">Passenger Portal</a></li>
+                        <li class="mb-2"><a href="porter/dashboard.html">Porter Console</a></li>
+                        <li class="mb-2"><a href="admin/dashboard.html">Station Admin</a></li>
+                        <li class="mb-2"><a href="admin/reports.html">DBMS Live Demo</a></li>
+                    </ul>
+                </div>
+                <div class="col-lg-4">
+                    <h5>
+                        <a href="contact.html#helpdesk" class="text-white text-decoration-none d-inline-flex align-items-center gap-2" title="Open 24/7 Station Helpdesk & Assistance Directory">
+                            <i class="fa-solid fa-headset text-warning"></i>
+                            <span class="text-decoration-underline">Station Helpdesk</span>
+                            <i class="fa-solid fa-arrow-up-right-from-square text-warning opacity-75" style="font-size: 0.8rem;"></i>
+                        </a>
+                    </h5>
+                    <p class="small mb-2">
+                        <a href="tel:1800111266" class="text-white text-decoration-none" title="Call Toll-Free Sahayak Helpline">
+                            <i class="fa-solid fa-phone me-2 text-warning"></i> Toll-Free Helpline: <span class="text-warning fw-bold text-decoration-underline">1800-111-COOLIE</span>
+                        </a>
+                    </p>
+                    <p class="small mb-2">
+                        <a href="mailto:support@smartporter.rail.gov.in" class="text-white text-decoration-none" title="Email Station Support">
+                            <i class="fa-solid fa-envelope me-2 text-warning"></i> <span class="text-decoration-underline">support@smartporter.rail.gov.in</span>
+                        </a>
+                    </p>
+                    <p class="small mb-3">
+                        <a href="contact.html#helpdesk" class="text-white text-decoration-none" title="View Terminal Helpdesk Locations">
+                            <i class="fa-solid fa-location-dot me-2 text-warning"></i> <span class="text-decoration-underline">Concourse Level, Railway Station Terminal Hubs</span>
+                        </a>
+                    </p>
+                    <div>
+                        <a href="contact.html#helpdesk" class="btn btn-sm btn-outline-warning text-white fw-bold">
+                            <i class="fa-solid fa-headset me-1"></i> Open Station Helpdesk Portal
+                        </a>
+                    </div>
+                </div>
+            </div>
+            <hr>
+            <div class="d-flex flex-wrap justify-content-between align-items-center small">
+                <div>&copy; 2026 Smart Porter. IRCTC Pilot Project. All Rights Reserved.</div>
+                <div>Designed & Built for BTech Computer Science & DBMS Mini Project.</div>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Passenger Auth Modal (Sign In or Sign Up before Booking) -->
+    <div class="modal fade" id="passengerAuthModal" tabindex="-1" aria-labelledby="passengerAuthModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content border-0 shadow-lg rounded-4 overflow-hidden">
+                <div class="modal-header border-0 pb-0" style="background: linear-gradient(135deg, #1e3a5f 0%, #2563eb 100%); color: white;">
+                    <div class="d-flex align-items-center gap-2">
+                        <i class="fa-solid fa-cart-flatbed-suitcase text-warning fs-3"></i>
+                        <div>
+                            <h5 class="fw-bold mb-0">Sign In to Book a Porter</h5>
+                            <small class="text-white-50">Please enter passenger details to assign your coolie</small>
+                        </div>
+                    </div>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body p-4">
+                    <!-- Nav Tabs -->
+                    <ul class="nav nav-pills nav-justified mb-3 p-1 rounded-3 bg-light border" id="authTabs" role="tablist">
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link active fw-bold py-2 rounded-3" id="tab-login-btn" data-bs-toggle="pill" data-bs-target="#tab-login" type="button" role="tab">
+                                <i class="fa-solid fa-right-to-bracket me-1"></i> Sign In
+                            </button>
+                        </li>
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link fw-bold py-2 rounded-3" id="tab-signup-btn" data-bs-toggle="pill" data-bs-target="#tab-signup" type="button" role="tab">
+                                <i class="fa-solid fa-user-plus me-1"></i> New Sign Up
+                            </button>
+                        </li>
+                    </ul>
+
+                    <div class="tab-content" id="authTabsContent">
+                        <!-- TAB 1: SIGN IN -->
+                        <div class="tab-pane fade show active" id="tab-login" role="tabpanel">
+                            <form id="modalLoginForm">
+                                <div class="mb-3">
+                                    <label class="form-label small fw-bold text-muted">Mobile Number or Email</label>
+                                    <div class="input-group">
+                                        <span class="input-group-text"><i class="fa-solid fa-phone text-muted"></i></span>
+                                        <input type="text" id="modalLoginIdent" class="form-control" placeholder="9811002233 or email" value="9811002233" required>
+                                    </div>
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label small fw-bold text-muted">Password</label>
+                                    <div class="input-group">
+                                        <span class="input-group-text"><i class="fa-solid fa-lock text-muted"></i></span>
+                                        <input type="password" id="modalLoginPwd" class="form-control" placeholder="Password" value="password123" required>
+                                    </div>
+                                </div>
+                                <button type="submit" class="btn btn-sp-orange w-100 py-2 fw-bold mb-3 shadow-sm" id="modalLoginSubmitBtn">
+                                    <i class="fa-solid fa-bolt me-1"></i> Sign In & Continue to Booking
+                                </button>
+                            </form>
+
+                            <div class="p-2 rounded bg-light border text-center">
+                                <div class="text-muted small fw-bold mb-1">⚡ 1-Click Quick Demo Login</div>
+                                <div class="d-flex gap-2">
+                                    <button type="button" class="btn btn-outline-primary btn-sm flex-grow-1" onclick="quickFillModal('9811002233', 'password123')">
+                                        <i class="fa-solid fa-user me-1"></i> Rajesh Sharma
+                                    </button>
+                                    <button type="button" class="btn btn-outline-success btn-sm flex-grow-1" onclick="quickFillModal('9822003344', 'password123')">
+                                        <i class="fa-solid fa-user me-1"></i> Priya Sundaram
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- TAB 2: SIGN UP -->
+                        <div class="tab-pane fade" id="tab-signup" role="tabpanel">
+                            <form id="modalSignupForm">
+                                <div class="mb-2">
+                                    <label class="form-label small fw-bold text-muted">Passenger Full Name</label>
+                                    <input type="text" id="modalRegName" class="form-control form-control-sm" placeholder="e.g. Ramesh Kumar" required>
+                                </div>
+                                <div class="row g-2 mb-2">
+                                    <div class="col-6">
+                                        <label class="form-label small fw-bold text-muted">Mobile Number</label>
+                                        <input type="tel" id="modalRegPhone" class="form-control form-control-sm" placeholder="10 digits" pattern="[0-9]{10}" required>
+                                    </div>
+                                    <div class="col-6">
+                                        <label class="form-label small fw-bold text-muted">Email</label>
+                                        <input type="email" id="modalRegEmail" class="form-control form-control-sm" placeholder="name@email.com" required>
+                                    </div>
+                                </div>
+                                <div class="row g-2 mb-2">
+                                    <div class="col-6">
+                                        <label class="form-label small fw-bold text-muted">Password</label>
+                                        <input type="password" id="modalRegPwd" class="form-control form-control-sm" placeholder="Min 6 chars" minlength="6" required>
+                                    </div>
+                                    <div class="col-6 d-flex align-items-center pt-3">
+                                        <div class="form-check">
+                                            <input class="form-check-input" type="checkbox" id="modalRegSenior">
+                                            <label class="form-check-label small" for="modalRegSenior">
+                                                Senior Citizen (15%)
+                                            </label>
+                                        </div>
+                                    </div>
+                                </div>
+                                <button type="submit" class="btn btn-sp-orange w-100 py-2 fw-bold shadow-sm" id="modalRegSubmitBtn">
+                                    <i class="fa-solid fa-user-plus me-1"></i> Register & Continue to Booking
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bootstrap 5 JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="assets/js/api.js"></script>
+    <script>
+        // ============================================================
+        // INSTANT FARE CALCULATOR — 100% Client-Side, No Server Needed
+        // Uses same pricing logic as MySQL fn_calculate_luggage_fare()
+        // ============================================================
+
+        // Station surcharge multipliers (NDLS/CSMT are more expensive)
+        const stationMult = {
+            ndls: 1.1, csmt: 1.15, hwh: 1.1, mas: 1.0, sbc: 1.0, hyb: 1.0, sc: 1.0,
+            agc: 1.0, bsb: 1.0, lko: 1.0, jp: 0.95, bpl: 0.95, ngp: 0.95,
+            mys: 0.9, cdg: 0.95, brc: 0.95, vskp: 0.95, slm: 0.9, gwl: 0.95,
+            udz: 0.9, pune: 1.0, jat: 0.95, ghy: 0.95, pnbe: 0.95, adi: 1.0
+        };
+
+        function calcQuick() {
+            const catSel  = document.getElementById('quick-cat');
+            const opt     = catSel.options[catSel.selectedIndex];
+            const stnSel  = document.getElementById('quick-station');
+            const stnCode = stnSel.value;
+            const stnOpt  = stnSel.options[stnSel.selectedIndex];
+
+            const baseCharge = parseFloat(opt.dataset.base) || 120;
+            const ratePerKg  = parseFloat(opt.dataset.rate) || 5;
+            const weight     = parseFloat(document.getElementById('quick-weight').value) || 15;
+            const mult       = stationMult[stnCode] || 1.0;
+
+            // Calculation: (base + weight×rate) × stationMultiplier
+            const rawBase    = baseCharge;
+            const weightAmt  = weight * ratePerKg;
+            const stnAdj     = ((rawBase + weightAmt) * mult) - (rawBase + weightAmt);
+            const total      = rawBase + weightAmt + stnAdj;
+
+            document.getElementById('quick-est-base').textContent   = `₹${rawBase.toFixed(2)}`;
+            document.getElementById('quick-weight-label').textContent = `${weight} kg × ₹${ratePerKg}`;
+            document.getElementById('quick-est-weight').textContent  = `₹${weightAmt.toFixed(2)}`;
+            document.getElementById('quick-est-stn').textContent     = `₹${stnAdj >= 0 ? '+' : ''}${stnAdj.toFixed(2)}`;
+            document.getElementById('quick-est-total').textContent   = `₹${Math.round(total)}.00`;
+
+            // Hide station row if no surcharge
+            document.getElementById('quick-station-row').style.display = Math.abs(stnAdj) > 0.5 ? 'flex' : 'none';
+        }
+
+        // Wire up all three controls — instant response on every change
+        document.getElementById('quick-station').addEventListener('change', calcQuick);
+        document.getElementById('quick-cat').addEventListener('change', calcQuick);
+        document.getElementById('quick-weight').addEventListener('input', calcQuick);
+
+        // Run once on page load
+        calcQuick();
+
+        // ============================================================
+        // PASSENGER AUTHENTICATION CHECK BEFORE BOOKING
+        // ============================================================
+        function isPassengerLoggedIn() {
+            const raw = localStorage.getItem('sp_user');
+            if (!raw) return false;
+            try {
+                const u = JSON.parse(raw);
+                return u && u.type === 'PASSENGER' && u.data;
+            } catch(e) {
+                return false;
+            }
+        }
+
+        function updateNavbarUserState() {
+            const authArea = document.getElementById('navAuthArea');
+            if (isPassengerLoggedIn()) {
+                const u = JSON.parse(localStorage.getItem('sp_user'));
+                authArea.innerHTML = `
+                    <div class="d-flex align-items-center gap-2">
+                        <span class="text-white small d-none d-md-inline">
+                            <i class="fa-solid fa-user-circle text-warning me-1"></i> Hi, <strong>${u.data.fullName || 'Passenger'}</strong>
+                        </span>
+                        <a href="passenger/dashboard.html" class="btn btn-outline-light btn-sm">
+                            <i class="fa-solid fa-gauge me-1"></i> Dashboard
+                        </a>
+                        <button class="btn btn-sm btn-outline-danger" onclick="logoutUser()" title="Logout">
+                            <i class="fa-solid fa-right-from-bracket"></i>
+                        </button>
+                        <a href="passenger/book.html" class="btn btn-sp-orange btn-sm">
+                            <i class="fa-solid fa-bolt me-1"></i> Book a Porter
+                        </a>
+                    </div>
+                `;
+            }
+        }
+
+        function logoutUser() {
+            localStorage.removeItem('sp_user');
+            window.location.reload();
+        }
+
+        function startBookingFlow(e) {
+            if (e) e.preventDefault();
+            if (isPassengerLoggedIn()) {
+                window.location.href = 'passenger/book.html';
+                return;
+            }
+            // Not logged in — open Passenger Sign In / Sign Up Modal
+            const authModal = new bootstrap.Modal(document.getElementById('passengerAuthModal'));
+            authModal.show();
+        }
+
+        function quickFillModal(phone, pwd) {
+            document.getElementById('modalLoginIdent').value = phone;
+            document.getElementById('modalLoginPwd').value = pwd;
+            document.getElementById('modalLoginForm').dispatchEvent(new Event('submit'));
+        }
+
+        // Modal Sign In Form Submit
+        document.getElementById('modalLoginForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const btn = document.getElementById('modalLoginSubmitBtn');
+            const ident = document.getElementById('modalLoginIdent').value.trim();
+            const pwd = document.getElementById('modalLoginPwd').value;
+
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin me-2"></i>Signing In...';
+
+            try {
+                const res = await API.loginPassenger({ emailOrPhone: ident, password: pwd });
+                localStorage.setItem('sp_user', JSON.stringify({ type: 'PASSENGER', data: res.data }));
+                showNotification(`Welcome, ${res.data.fullName}! Redirecting to porter booking...`, 'success');
+                setTimeout(() => {
+                    window.location.href = 'passenger/book.html';
+                }, 600);
+            } catch(err) {
+                showNotification(err.message || 'Login failed', 'danger');
+                btn.disabled = false;
+                btn.innerHTML = '<i class="fa-solid fa-bolt me-1"></i> Sign In & Continue to Booking';
+            }
+        });
+
+        // Modal Sign Up Form Submit
+        document.getElementById('modalSignupForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const btn = document.getElementById('modalRegSubmitBtn');
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin me-2"></i>Creating Profile...';
+
+            try {
+                const res = await API.registerPassenger({
+                    fullName: document.getElementById('modalRegName').value.trim(),
+                    phone: document.getElementById('modalRegPhone').value.trim(),
+                    email: document.getElementById('modalRegEmail').value.trim(),
+                    password: document.getElementById('modalRegPwd').value,
+                    isSeniorCitizen: document.getElementById('modalRegSenior').checked,
+                    gender: 'Other'
+                });
+                localStorage.setItem('sp_user', JSON.stringify({ type: 'PASSENGER', data: res.data }));
+                showNotification(`Account created! Continuing to luggage booking...`, 'success');
+                setTimeout(() => {
+                    window.location.href = 'passenger/book.html';
+                }, 600);
+            } catch(err) {
+                showNotification(err.message || 'Registration failed', 'danger');
+                btn.disabled = false;
+                btn.innerHTML = '<i class="fa-solid fa-user-plus me-1"></i> Register & Continue to Booking';
+            }
+        });
+
+        // Check user state on home page load
+        updateNavbarUserState();
+    </script>
+</body>
+</html>
