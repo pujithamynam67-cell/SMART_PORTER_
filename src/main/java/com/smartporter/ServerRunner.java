@@ -104,7 +104,7 @@ public class ServerRunner {
         private void handleApi(HttpExchange exchange, String method, String path, String query) throws Exception {
             Map<String, String> queryParams = parseQueryParams(query);
 
-            if (path.equals("/api/auth/register-passenger") && "POST".equalsIgnoreCase(method)) {
+            if ((path.equals("/api/auth/register") || path.equals("/api/auth/register-passenger")) && "POST".equalsIgnoreCase(method)) {
                 Map<String, Object> body = readJsonBody(exchange);
                 Passenger p = new Passenger();
                 p.setFullName((String) body.get("fullName"));
@@ -115,25 +115,25 @@ public class ServerRunner {
                 String password = (String) body.get("password");
 
                 Passenger created = passengerDAO.register(p, password);
-                sendJsonResponse(exchange, 200, Map.of("success", true, "passenger", created));
+                sendJsonResponse(exchange, 200, Map.of("success", true, "passenger", created, "data", created));
                 return;
             }
 
-            if (path.equals("/api/auth/login-passenger") && "POST".equalsIgnoreCase(method)) {
+            if ((path.equals("/api/auth/login") || path.equals("/api/auth/login-passenger")) && "POST".equalsIgnoreCase(method)) {
                 Map<String, Object> body = readJsonBody(exchange);
                 String emailOrPhone = (String) body.get("emailOrPhone");
                 String password = (String) body.get("password");
 
                 Passenger p = passengerDAO.authenticate(emailOrPhone, password);
                 if (p != null) {
-                    sendJsonResponse(exchange, 200, Map.of("success", true, "userType", "PASSENGER", "passenger", p));
+                    sendJsonResponse(exchange, 200, Map.of("success", true, "userType", "PASSENGER", "passenger", p, "data", p));
                 } else {
                     sendJsonResponse(exchange, 401, Map.of("success", false, "message", "Invalid passenger phone/email or password."));
                 }
                 return;
             }
 
-            if (path.equals("/api/auth/register-porter") && "POST".equalsIgnoreCase(method)) {
+            if ((path.equals("/api/auth/porter-register") || path.equals("/api/auth/register-porter")) && "POST".equalsIgnoreCase(method)) {
                 Map<String, Object> body = readJsonBody(exchange);
                 Porter p = new Porter();
                 p.setBadgeNumber((String) body.get("badgeNumber"));
@@ -144,41 +144,46 @@ public class ServerRunner {
                 String password = (String) body.get("password");
 
                 Porter created = porterDAO.register(p, password);
-                sendJsonResponse(exchange, 200, Map.of("success", true, "porter", created));
+                sendJsonResponse(exchange, 200, Map.of("success", true, "porter", created, "data", created));
                 return;
             }
 
-            if (path.equals("/api/auth/login-porter") && "POST".equalsIgnoreCase(method)) {
+            if ((path.equals("/api/auth/porter-login") || path.equals("/api/auth/login-porter")) && "POST".equalsIgnoreCase(method)) {
                 Map<String, Object> body = readJsonBody(exchange);
                 String phoneOrBadge = (String) body.get("phoneOrBadge");
                 String password = (String) body.get("password");
 
                 Porter p = porterDAO.authenticate(phoneOrBadge, password);
                 if (p != null) {
-                    sendJsonResponse(exchange, 200, Map.of("success", true, "userType", "PORTER", "porter", p));
+                    sendJsonResponse(exchange, 200, Map.of("success", true, "userType", "PORTER", "porter", p, "data", p));
                 } else {
                     sendJsonResponse(exchange, 401, Map.of("success", false, "message", "Invalid porter badge/phone or password."));
                 }
                 return;
             }
 
-            if (path.equals("/api/auth/login-admin") && "POST".equalsIgnoreCase(method)) {
+            if ((path.equals("/api/auth/admin-login") || path.equals("/api/auth/login-admin")) && "POST".equalsIgnoreCase(method)) {
                 Map<String, Object> body = readJsonBody(exchange);
                 String username = (String) body.get("username");
                 String password = (String) body.get("password");
 
                 boolean ok = adminDAO.authenticate(username, password);
                 if (ok) {
-                    sendJsonResponse(exchange, 200, Map.of("success", true, "userType", "ADMIN", "username", username));
+                    sendJsonResponse(exchange, 200, Map.of("success", true, "userType", "ADMIN", "username", username, "data", Map.of("username", username)));
                 } else {
                     sendJsonResponse(exchange, 401, Map.of("success", false, "message", "Invalid admin credentials."));
                 }
                 return;
             }
 
+            if (path.equals("/api/auth/logout") && "POST".equalsIgnoreCase(method)) {
+                sendJsonResponse(exchange, 200, Map.of("success", true, "message", "Logged out successfully"));
+                return;
+            }
+
             if (path.equals("/api/stations") && "GET".equalsIgnoreCase(method)) {
                 List<Station> stations = stationDAO.getAll();
-                sendJsonResponse(exchange, 200, Map.of("success", true, "stations", stations));
+                sendJsonResponse(exchange, 200, Map.of("success", true, "stations", stations, "data", stations));
                 return;
             }
 
@@ -344,14 +349,42 @@ public class ServerRunner {
                 path = "/index.html";
             }
 
-            // Look in src/main/webapp first
-            File file = new File("src/main/webapp" + path);
-            if (!file.exists() || file.isDirectory()) {
-                file = new File("src/main/webapp/index.html");
+            // Strip leading /frontend if present so /frontend/assets/... resolves to /assets/...
+            String relPath = path;
+            if (relPath.startsWith("/frontend/")) {
+                relPath = relPath.substring("/frontend".length());
+            } else if (relPath.equals("/frontend")) {
+                relPath = "/index.html";
             }
 
-            if (!file.exists()) {
-                String notFound = "<h1>404 Not Found - Smart Porter Webapp</h1>";
+            String[] candidates = {
+                "frontend" + relPath,
+                "frontend" + path,
+                "../frontend" + relPath,
+                "src/main/webapp" + path,
+                "backend/src/main/webapp" + path
+            };
+
+            File file = null;
+            for (String c : candidates) {
+                File f = new File(c);
+                if (f.exists() && !f.isDirectory()) {
+                    file = f;
+                    break;
+                }
+            }
+
+            if (file == null) {
+                File f = new File("frontend/index.html");
+                if (f.exists()) file = f;
+                else {
+                    File f2 = new File("src/main/webapp/index.html");
+                    if (f2.exists()) file = f2;
+                }
+            }
+
+            if (file == null || !file.exists()) {
+                String notFound = "<h1>404 Not Found - Smart Porter Webapp</h1><p>Requested: " + path + "</p>";
                 exchange.getResponseHeaders().set("Content-Type", "text/html; charset=UTF-8");
                 exchange.sendResponseHeaders(404, notFound.length());
                 try (OutputStream os = exchange.getResponseBody()) {
@@ -370,6 +403,7 @@ public class ServerRunner {
 
             byte[] bytes = Files.readAllBytes(file.toPath());
             exchange.getResponseHeaders().set("Content-Type", mimeType + "; charset=UTF-8");
+            exchange.getResponseHeaders().set("Cache-Control", "no-cache, no-store, must-revalidate");
             exchange.sendResponseHeaders(200, bytes.length);
             try (OutputStream os = exchange.getResponseBody()) {
                 os.write(bytes);

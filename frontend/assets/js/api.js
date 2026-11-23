@@ -10,10 +10,33 @@ const API = (() => {
     // 1. BASE URL RESOLUTION
     // -------------------------------------------------------------
     const getBaseUrl = () => {
+        // No backend reachable from file:// protocol (browser CORS blocks it)
         if (window.location.protocol === 'file:') {
+            return null;
+        }
+
+        const hostname = window.location.hostname || '';
+
+        // Known static hosting platforms — no Java/Servlet backend available
+        if (hostname.includes('.vercel.app') ||
+            hostname.includes('.netlify.app') ||
+            hostname.includes('.github.io') ||
+            hostname.includes('.surge.sh') ||
+            hostname.includes('.pages.dev') ||
+            hostname.includes('.onrender.com') ||
+            hostname.includes('.render.com')) {
+            return null;
+        }
+
+        const origin = window.location.origin;
+        const port = window.location.port;
+
+        // Common static frontend dev ports (Live Server: 5500, Vite: 5173, React: 3000, Python: 8000)
+        // These static servers do NOT host Java servlets. Direct calls to Java backend at port 8080
+        if (['5500', '5501', '3000', '5173', '8000'].includes(port)) {
             return 'http://localhost:8080/api';
         }
-        const origin = window.location.origin;
+
         const isSmartPorterContext = window.location.pathname.startsWith('/SmartPorter');
         return isSmartPorterContext ? `${origin}/SmartPorter/api` : `${origin}/api`;
     };
@@ -238,7 +261,15 @@ const API = (() => {
     // 3. CORE REQUEST DISPATCHER (Network First, Seamless Local Fallback)
     // -------------------------------------------------------------
     const request = async (endpoint, options = {}) => {
-        const url = `${getBaseUrl()}${endpoint}`;
+        const baseUrl = getBaseUrl();
+
+        // No live backend available — use local mock engine directly (zero latency, no console errors)
+        if (!baseUrl) {
+            console.info(`[Smart Porter] Using local data engine for ${endpoint}`);
+            return handleLocalFallback(endpoint, options);
+        }
+
+        const url = `${baseUrl}${endpoint}`;
         const defaultHeaders = {
             'Content-Type': 'application/json',
             'Accept': 'application/json'
@@ -253,35 +284,44 @@ const API = (() => {
         };
 
         try {
-            // Attempt live server fetch with timeout
+            // Fast 1200ms probe for live backend server
             const controller = new AbortController();
-            const timeoutId = setTimeout(() => controller.abort(), 2000);
+            const timeoutId = setTimeout(() => controller.abort(), 1200);
             
             const response = await fetch(url, { ...config, signal: controller.signal });
             clearTimeout(timeoutId);
 
-            const data = await response.json().catch(() => ({}));
+            // If 404 (endpoint not on server), 405 (static server), 502/503/504
+            if (response.status === 404 || response.status === 405 || response.status >= 500) {
+                console.warn(`[Smart Porter] Server returned HTTP ${response.status} for ${endpoint}. Using local data engine.`);
+                return handleLocalFallback(endpoint, options);
+            }
+
+            const text = await response.text();
+            let data = null;
+            try {
+                data = JSON.parse(text);
+            } catch (e) {
+                // If the response is HTML (like an error page), fall back locally
+                console.warn(`[Smart Porter] Non-JSON response for ${endpoint}. Using local data engine.`);
+                return handleLocalFallback(endpoint, options);
+            }
+
             if (!response.ok) {
-                // If the server answered with an intentional 4xx error (e.g. wrong password), throw it
-                const errorMsg = data.message || `Request failed with status ${response.status}`;
-                throw new Error(errorMsg);
+                // If it's an explicit 401 Unauthorized or 400 with a message from a live backend
+                const err = new Error((data && data.message) ? data.message : `Request failed with status ${response.status}`);
+                err.isBusinessError = true;
+                throw err;
             }
             return data;
         } catch (error) {
-            // Check if this was a network failure (server offline, file:// protocol, connection refused)
-            const isNetworkError = error.name === 'AbortError' ||
-                                   error.message.includes('fetch') ||
-                                   error.message.includes('Failed') ||
-                                   error.message.includes('NetworkError') ||
-                                   error.message.includes('CORS') ||
-                                   window.location.protocol === 'file:';
-
-            if (isNetworkError) {
-                console.warn(`[Smart Porter Local Engine] Server not reachable. Handling ${endpoint} locally.`);
-                return handleLocalFallback(endpoint, options);
+            // Propagate explicit credentials rejection from authenticated server
+            if (error.isBusinessError) {
+                throw error;
             }
-            // Real application/business error from live server
-            throw error;
+            // All other network errors, 404s, CORS, connection refused, or timeouts seamlessly fall back
+            console.warn(`[Smart Porter] Live backend not available (${error.message}). Handling ${endpoint} with local engine.`);
+            return handleLocalFallback(endpoint, options);
         }
     };
 

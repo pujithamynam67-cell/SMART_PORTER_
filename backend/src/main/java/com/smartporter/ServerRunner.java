@@ -391,10 +391,25 @@ public class ServerRunner {
                 path = "/index.html";
             }
 
-            String[] roots = { "frontend", "../frontend", "backend/src/main/webapp", "src/main/webapp" };
+            // Strip leading /frontend if present so /frontend/assets/... resolves to /assets/...
+            String relPath = path;
+            if (relPath.startsWith("/frontend/")) {
+                relPath = relPath.substring("/frontend".length());
+            } else if (relPath.equals("/frontend")) {
+                relPath = "/index.html";
+            }
+
+            String[] candidates = {
+                "frontend" + relPath,
+                "frontend" + path,
+                "../frontend" + relPath,
+                "backend/src/main/webapp" + path,
+                "src/main/webapp" + path
+            };
+
             File file = null;
-            for (String r : roots) {
-                File f = new File(r + path);
+            for (String c : candidates) {
+                File f = new File(c);
                 if (f.exists() && !f.isDirectory()) {
                     file = f;
                     break;
@@ -402,13 +417,11 @@ public class ServerRunner {
             }
 
             if (file == null) {
-                // If it's a folder or default to index.html
-                for (String r : roots) {
-                    File f = new File(r + "/index.html");
-                    if (f.exists()) {
-                        file = f;
-                        break;
-                    }
+                File f = new File("frontend/index.html");
+                if (f.exists()) file = f;
+                else {
+                    File f2 = new File("src/main/webapp/index.html");
+                    if (f2.exists()) file = f2;
                 }
             }
 
@@ -432,6 +445,7 @@ public class ServerRunner {
 
             byte[] b = Files.readAllBytes(file.toPath());
             exchange.getResponseHeaders().set("Content-Type", mime + "; charset=UTF-8");
+            exchange.getResponseHeaders().set("Cache-Control", "no-cache, no-store, must-revalidate");
             exchange.sendResponseHeaders(200, b.length);
             try (OutputStream os = exchange.getResponseBody()) {
                 os.write(b);
